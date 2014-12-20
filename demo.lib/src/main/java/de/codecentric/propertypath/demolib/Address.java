@@ -7,13 +7,17 @@ import de.codecentric.propertypath.api.WithProperties;
 public class Address {
 
     @Property
-    private String street;
+    private String streetAndNumber;
 
-    public String getStreet() {
-	return street;
+    @Property
+    private String city;
+
+    public String getStreetAndNumber() {
+	return streetAndNumber;
     }
 
-    public void setStreet(String street) {
-	this.street = street;
+    public void setStreetAndNumber(String streetAndNumber) {
+	this.streetAndNumber = streetAndNumber;
     }
+
 }

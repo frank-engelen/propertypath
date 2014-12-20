@@ -5,9 +5,9 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PropertyPath {
+public class PropertyPath<T> {
 
-    private final PropertyPath parent;
+    private final PropertyPath<T> parent;
     private final String nameInParent;
     private final String fullPath;
     private final Class<?> originClazz;
@@ -15,7 +15,7 @@ public class PropertyPath {
     private final Method setter;
     private final Class<?> targetClass;
 
-    public PropertyPath(Class<?> originClazz, PropertyPath parent, String nameInParent, Class<?> typeInParent) {
+    public PropertyPath(Class<T> originClazz, PropertyPath<T> parent, String nameInParent, Class<?> typeInParent) {
 	this.originClazz = originClazz;
 	this.parent = parent;
 	this.nameInParent = nameInParent;
@@ -43,7 +43,7 @@ public class PropertyPath {
 	}
     }
 
-    public PropertyPath getParent() {
+    public PropertyPath<T> getParent() {
 	return parent;
     }
 
@@ -77,7 +77,7 @@ public class PropertyPath {
     private static Method[] EMPTY_METHOD_ARRAY = new Method[0];
     private static final Map<String, Method[]> originClassAndFullPath2GetterArray = new HashMap<String, Method[]>();
 
-    private static Method[] getGetters(Class<?> originClass, String fullPath, PropertyPath parent, String nameInParent) {
+    private static Method[] getGetters(Class<?> originClass, String fullPath, PropertyPath<?> parent, String nameInParent) {
 	final String key = originClass.getName() + "#" + fullPath;
 
 	Method[] getters = originClassAndFullPath2GetterArray.get(key);
@@ -237,8 +237,8 @@ public class PropertyPath {
 
     @Override
     public boolean equals(Object obj) {
-	if (obj instanceof PropertyPath) {
-	    PropertyPath prop = (PropertyPath) obj;
+	if (obj instanceof PropertyPath<?>) {
+	    PropertyPath<?> prop = (PropertyPath<?>) obj;
 	    return originClazz.equals(prop.originClazz) && fullPath.equals(prop.fullPath);
 	}
 	return false;
@@ -249,11 +249,11 @@ public class PropertyPath {
 	return originClazz.hashCode() * 37 + fullPath.hashCode();
     }
 
-    public boolean sameOriginClass(PropertyPath other) {
+    public boolean sameOriginClass(PropertyPath<?> other) {
 	return other != null && this.originClazz.equals(other.originClazz);
     }
 
-    public boolean sameTargetClass(PropertyPath other) {
+    public boolean sameTargetClass(PropertyPath<?> other) {
 	return other != null && this.targetClass.equals(other.targetClass);
     }
 }

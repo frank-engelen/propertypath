@@ -36,9 +36,8 @@ public class PropertyPathAnnotationProcessor extends AbstractProcessor {
 
 	Set<? extends Element> elements = roundEnv.getElementsAnnotatedWith(WithProperties.class);
 
-	System.out.println("TEST");
 	for (Element e : elements) {
-	    processingEnv.getMessager().printMessage(Kind.NOTE, "Hello World:" + e.toString(), e);
+	    processingEnv.getMessager().printMessage(Kind.NOTE, "Hello World 2:" + e.toString(), e);
 	    try {
 		handle(e);
 	    } catch (IOException e1) {
@@ -89,9 +88,9 @@ public class PropertyPathAnnotationProcessor extends AbstractProcessor {
 		    toAdd = "";
 		}
 
-		builderAttributes.append("    public final " + simpleNamePMType + " " + simpleNameAttribute + ";\n");
-		builderConstructor.append("        " + simpleNameAttribute + " = new " + simpleNamePMType + "(rootType, this, \"" + simpleNameAttribute + "\""
-			+ toAdd + ");\n");
+		builderAttributes.append("    public final " + simpleNamePMType + "<T> " + simpleNameAttribute + ";\n");
+		builderConstructor.append("        " + simpleNameAttribute + " = new " + simpleNamePMType + "<T>(rootType, this, \"" + simpleNameAttribute
+			+ "\"" + toAdd + ");\n");
 		importPath.add(fqnPMType);
 	    }
 
@@ -100,14 +99,14 @@ public class PropertyPathAnnotationProcessor extends AbstractProcessor {
 	    }
 
 	    println();
-	    println("public class " + propsClassNameSimple + " extends PropertyPath {");
+	    println("public class " + propsClassNameSimple + "<T> extends PropertyPath<T> {");
 	    println(builderAttributes.toString());
 
-	    println("    public " + propsClassNameSimple + "() {");
-	    println("        this(" + e.getSimpleName() + ".class, null, null);");
+	    println("    public static " + propsClassNameSimple + "<" + e.getSimpleName() + ">  create() {");
+	    println("        return new " + propsClassNameSimple + "<" + e.getSimpleName() + ">(" + e.getSimpleName() + ".class, null, null);");
 	    println("    }");
 
-	    println("    public " + propsClassNameSimple + "(Class<?> rootType, PropertyPath parent, String nameInParent) {");
+	    println("    public " + propsClassNameSimple + "(Class<T> rootType, PropertyPath<T> parent, String nameInParent) {");
 	    println("        super(rootType, parent, nameInParent, " + e.getSimpleName() + ".class);");
 	    println(builderConstructor.toString());
 	    println("    }");
@@ -121,7 +120,7 @@ public class PropertyPathAnnotationProcessor extends AbstractProcessor {
     }
 
     private String getPropertyClassName(Element e) {
-	return "PQ_" + e.getSimpleName();
+	return e.getSimpleName() + "Properties";
     }
 
     public void println() {

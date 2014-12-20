@@ -14,10 +14,14 @@ public class App {
 	Person p = new Person();
 	p.setAddress(new Address());
 
-	PropertyPath street = new PQ_Person().address.street;
+	PersonProperties<Person> personProperties = PersonProperties.create();
 
-	street.set(p, "Homestr.1");
+	PropertyPath<Person> namePath = personProperties.name;
+	PropertyPath<Person> cityPath = personProperties.address.city;
+	System.out.println(namePath.sameOriginClass(cityPath));
 
-	System.out.println(p.getAddress().getStreet());
+	PropertyPath<Person> streetPath = personProperties.address.streetAndNumber;
+	streetPath.set(p, "Homestr.1");
+	System.out.println(p.getAddress().getStreetAndNumber());
     }
 }
