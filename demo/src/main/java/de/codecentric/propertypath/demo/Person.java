@@ -7,6 +7,8 @@ import de.codecentric.propertypath.demolib.Address;
 @WithProperties
 public class Person {
 
+    public static final PersonProperties<Person, Person> PROPERTIES = PersonProperties.create();
+
     @Property
     private String name;
 

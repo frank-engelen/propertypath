@@ -37,7 +37,7 @@ public class PropertyPathAnnotationProcessor extends AbstractProcessor {
 	Set<? extends Element> elements = roundEnv.getElementsAnnotatedWith(WithProperties.class);
 
 	for (Element e : elements) {
-	    processingEnv.getMessager().printMessage(Kind.NOTE, "Hello World 2:" + e.toString(), e);
+	    processingEnv.getMessager().printMessage(Kind.NOTE, "Processing :" + e.toString(), e);
 	    try {
 		handle(e);
 	    } catch (IOException e1) {
@@ -88,9 +88,9 @@ public class PropertyPathAnnotationProcessor extends AbstractProcessor {
 		    toAdd = "";
 		}
 
-		builderAttributes.append("    public final " + simpleNamePMType + "<T> " + simpleNameAttribute + ";\n");
-		builderConstructor.append("        " + simpleNameAttribute + " = new " + simpleNamePMType + "<T>(rootType, this, \"" + simpleNameAttribute
-			+ "\"" + toAdd + ");\n");
+		builderAttributes.append("    public final " + simpleNamePMType + "<ORIGIN, " + innerType + "> " + simpleNameAttribute + ";\n");
+		builderConstructor.append("        " + simpleNameAttribute + " = new " + simpleNamePMType + "<ORIGIN, " + innerType + ">(rootType, this, \""
+			+ simpleNameAttribute + "\"" + toAdd + ");\n");
 		importPath.add(fqnPMType);
 	    }
 
@@ -99,14 +99,15 @@ public class PropertyPathAnnotationProcessor extends AbstractProcessor {
 	    }
 
 	    println();
-	    println("public class " + propsClassNameSimple + "<T> extends PropertyPath<T> {");
+	    println("public class " + propsClassNameSimple + "<ORIGIN,TARGET> extends PropertyPath<ORIGIN,TARGET> {");
 	    println(builderAttributes.toString());
 
-	    println("    public static " + propsClassNameSimple + "<" + e.getSimpleName() + ">  create() {");
-	    println("        return new " + propsClassNameSimple + "<" + e.getSimpleName() + ">(" + e.getSimpleName() + ".class, null, null);");
+	    println("    public static " + propsClassNameSimple + "<" + e.getSimpleName() + ", " + e.getSimpleName() + ">  create() {");
+	    println("        return new " + propsClassNameSimple + "<" + e.getSimpleName() + ", " + e.getSimpleName() + ">(" + e.getSimpleName()
+		    + ".class, null, null);");
 	    println("    }");
 
-	    println("    public " + propsClassNameSimple + "(Class<T> rootType, PropertyPath<T> parent, String nameInParent) {");
+	    println("    public " + propsClassNameSimple + "(Class<ORIGIN> rootType, PropertyPath<ORIGIN,?> parent, String nameInParent) {");
 	    println("        super(rootType, parent, nameInParent, " + e.getSimpleName() + ".class);");
 	    println(builderConstructor.toString());
 	    println("    }");

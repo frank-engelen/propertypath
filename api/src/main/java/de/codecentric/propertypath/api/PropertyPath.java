@@ -5,9 +5,9 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PropertyPath<T> {
+public class PropertyPath<ORIGIN, TARGET> {
 
-    private final PropertyPath<T> parent;
+    private final PropertyPath<ORIGIN, ?> parent;
     private final String nameInParent;
     private final String fullPath;
     private final Class<?> originClazz;
@@ -15,7 +15,7 @@ public class PropertyPath<T> {
     private final Method setter;
     private final Class<?> targetClass;
 
-    public PropertyPath(Class<T> originClazz, PropertyPath<T> parent, String nameInParent, Class<?> typeInParent) {
+    public PropertyPath(Class<ORIGIN> originClazz, PropertyPath<ORIGIN, ?> parent, String nameInParent, Class<?> typeInParent) {
 	this.originClazz = originClazz;
 	this.parent = parent;
 	this.nameInParent = nameInParent;
@@ -43,7 +43,7 @@ public class PropertyPath<T> {
 	}
     }
 
-    public PropertyPath<T> getParent() {
+    public PropertyPath<ORIGIN, ?> getParent() {
 	return parent;
     }
 
@@ -77,7 +77,7 @@ public class PropertyPath<T> {
     private static Method[] EMPTY_METHOD_ARRAY = new Method[0];
     private static final Map<String, Method[]> originClassAndFullPath2GetterArray = new HashMap<String, Method[]>();
 
-    private static Method[] getGetters(Class<?> originClass, String fullPath, PropertyPath<?> parent, String nameInParent) {
+    private static Method[] getGetters(Class<?> originClass, String fullPath, PropertyPath<?, ?> parent, String nameInParent) {
 	final String key = originClass.getName() + "#" + fullPath;
 
 	Method[] getters = originClassAndFullPath2GetterArray.get(key);
@@ -183,27 +183,34 @@ public class PropertyPath<T> {
 	return originClazz.getName() + "::" + fullPath + "/" + (setter != null ? setter.getName() : "n/a") + " (" + targetClass.getName() + ")";
     }
 
-    public Object get(Object instance) {
+    public TARGET get(ORIGIN instance) {
 	if (instance == null) {
 	    return null;
 	}
+
 	Object current = instance;
-	for (int i = 0; i < methods.length && current != null; i++) {
-	    Method m = methods[i];
-	    try {
-		current = m.invoke(current);
-	    } catch (IllegalArgumentException e) {
-		throw new RuntimeException(e);
-	    } catch (IllegalAccessException e) {
-		throw new RuntimeException(e);
-	    } catch (InvocationTargetException e) {
-		throw new RuntimeException(e);
+	if (methods != null) {
+	    for (int i = 0; i < methods.length && current != null; i++) {
+		Method m = methods[i];
+		try {
+		    current = m.invoke(current);
+		} catch (IllegalArgumentException e) {
+		    throw new RuntimeException(e);
+		} catch (IllegalAccessException e) {
+		    throw new RuntimeException(e);
+		} catch (InvocationTargetException e) {
+		    throw new RuntimeException(e);
+		}
 	    }
 	}
-	return current;
+
+	@SuppressWarnings("unchecked")
+	final TARGET result = (TARGET) current;
+
+	return result;
     }
 
-    public void set(Object instance, Object value) {
+    public void set(ORIGIN instance, TARGET value) {
 	if (instance == null || setter == null) {
 	    return;
 	}
@@ -237,8 +244,8 @@ public class PropertyPath<T> {
 
     @Override
     public boolean equals(Object obj) {
-	if (obj instanceof PropertyPath<?>) {
-	    PropertyPath<?> prop = (PropertyPath<?>) obj;
+	if (obj instanceof PropertyPath<?, ?>) {
+	    PropertyPath<?, ?> prop = (PropertyPath<?, ?>) obj;
 	    return originClazz.equals(prop.originClazz) && fullPath.equals(prop.fullPath);
 	}
 	return false;
@@ -249,11 +256,11 @@ public class PropertyPath<T> {
 	return originClazz.hashCode() * 37 + fullPath.hashCode();
     }
 
-    public boolean sameOriginClass(PropertyPath<?> other) {
+    public boolean sameOriginClass(PropertyPath<?, ?> other) {
 	return other != null && this.originClazz.equals(other.originClazz);
     }
 
-    public boolean sameTargetClass(PropertyPath<?> other) {
+    public boolean sameTargetClass(PropertyPath<?, ?> other) {
 	return other != null && this.targetClass.equals(other.targetClass);
     }
 }
