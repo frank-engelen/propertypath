@@ -1,10 +1,5 @@
 package de.codecentric.propertypath.api;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -235,34 +230,6 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
 
     public boolean sameTargetClass(PropertyPath<?, ?> other) {
 	return other != null && this.typeInParent.equals(other.typeInParent);
-    }
-
-    protected static <T extends Serializable> T deepCopy(T source) {
-	if (source == null) {
-	    return null;
-	}
-
-	try {
-	    final ByteArrayOutputStream bos = new ByteArrayOutputStream(2048);
-	    final ObjectOutputStream oos = new ObjectOutputStream(bos);
-	    oos.writeObject(source);
-	    oos.flush();
-	    oos.close();
-	    bos.flush();
-	    bos.close();
-
-	    final ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
-	    final ObjectInputStream ois = new ObjectInputStream(bis);
-
-	    @SuppressWarnings("unchecked")
-	    T destination = (T) ois.readObject();
-
-	    return destination;
-	} catch (IOException e) {
-	    throw new RuntimeException(e);
-	} catch (ClassNotFoundException e) {
-	    throw new RuntimeException(e);
-	}
     }
 
     public boolean startsWith(PropertyPath<ORIGIN, ?> subPath) {
