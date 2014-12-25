@@ -17,6 +17,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import javax.tools.Diagnostic.Kind;
 import javax.tools.JavaFileObject;
@@ -85,7 +86,6 @@ public class PropertyPathAnnotationProcessor extends AbstractProcessor {
 		    PackageElement packageOfInner = processingEnv.getElementUtils().getPackageOf(innerElement);
 		    fqnPMType = packageOfInner.getQualifiedName() + "." + simpleNamePMType;
 		    importPath.add(fqnPMType);
-		    toAdd = "";
 		}
 
 		builderAttributes.append("    public final " + simpleNamePMType + "<ORIGIN, " + innerType + "> " + simpleNameAttribute + ";\n");
@@ -99,16 +99,27 @@ public class PropertyPathAnnotationProcessor extends AbstractProcessor {
 	    }
 
 	    println();
-	    println("public class " + propsClassNameSimple + "<ORIGIN,TARGET> extends PropertyPath<ORIGIN,TARGET> {");
+	    final String superClass = getSuperClass(e);
+	    println("public class " + propsClassNameSimple + "<ORIGIN,TARGET> extends " + superClass + " {");
 	    println(builderAttributes.toString());
 
-	    println("    public static " + propsClassNameSimple + "<" + e.getSimpleName() + ", " + e.getSimpleName() + ">  create() {");
+	    println("    public static " + propsClassNameSimple + "<" + e.getSimpleName() + ", " + e.getSimpleName() + ">  new" + propsClassNameSimple + "() {");
 	    println("        return new " + propsClassNameSimple + "<" + e.getSimpleName() + ", " + e.getSimpleName() + ">(" + e.getSimpleName()
-		    + ".class, null, null);");
+		    + ".class, null, null, " + e.getSimpleName() + ".class);");
 	    println("    }");
 
-	    println("    public " + propsClassNameSimple + "(Class<ORIGIN> rootType, PropertyPath<ORIGIN,?> parent, String nameInParent) {");
-	    println("        super(rootType, parent, nameInParent, " + e.getSimpleName() + ".class);");
+	    // Normal-Constructor
+	    println("    public " + propsClassNameSimple
+		    + "(Class<ORIGIN> rootType, PropertyPath<ORIGIN,?> parent, String nameInParent, Class<?> typeInParent) {");
+	    println("        super(rootType, parent, nameInParent, typeInParent);");
+	    println(builderConstructor.toString());
+	    println("    }");
+
+	    // Copy-Constructor for Downcast
+	    println("    public "
+		    + propsClassNameSimple
+		    + "(Class<ORIGIN> rootType, PropertyPath<ORIGIN, ?> parent, String nameInParent, String fullPath, java.lang.reflect.Method[] methods, java.lang.reflect.Method setter, Class<?> targetClass) {");
+	    println("        super(rootType, parent, nameInParent, fullPath, methods, setter, targetClass);");
 	    println(builderConstructor.toString());
 	    println("    }");
 
@@ -118,6 +129,34 @@ public class PropertyPathAnnotationProcessor extends AbstractProcessor {
 	    writer.flush();
 	    writer.close();
 	}
+    }
+
+    private String getSuperClass(Element e) {
+
+	final Types typeUtils = processingEnv.getTypeUtils();
+
+	final List<? extends TypeMirror> supertypes = typeUtils.directSupertypes(e.asType());
+	for (TypeMirror superType : supertypes) {
+	    if (superType.toString().equals("java.lang.Object")) {
+		continue;
+	    }
+
+	    final Element superElement = typeUtils.asElement(superType);
+	    if (superElement.getAnnotation(WithProperties.class) != null) {
+		return getPropertyClassName(superElement) + "<ORIGIN, TARGET>";
+	    }
+	}
+
+	for (TypeMirror superType : supertypes) {
+	    if (superType.toString().equals("java.lang.Object")) {
+		continue;
+	    }
+
+	    final Element superElement = typeUtils.asElement(superType);
+	    return getSuperClass(superElement);
+	}
+
+	return "PropertyPath<ORIGIN,TARGET>";
     }
 
     private String getPropertyClassName(Element e) {

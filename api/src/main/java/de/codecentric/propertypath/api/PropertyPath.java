@@ -1,5 +1,6 @@
 package de.codecentric.propertypath.api;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -14,6 +15,17 @@ public class PropertyPath<ORIGIN, TARGET> {
     private final Method[] methods;
     private final Method setter;
     private final Class<?> targetClass;
+
+    public PropertyPath(Class<?> originClazz, PropertyPath<ORIGIN, ?> parent, String nameInParent, String fullPath, Method[] methods, Method setter,
+	    Class<?> targetClass) {
+	this.originClazz = originClazz;
+	this.parent = parent;
+	this.nameInParent = nameInParent;
+	this.fullPath = fullPath;
+	this.methods = methods;
+	this.setter = setter;
+	this.targetClass = targetClass;
+    }
 
     public PropertyPath(Class<ORIGIN> originClazz, PropertyPath<ORIGIN, ?> parent, String nameInParent, Class<?> typeInParent) {
 	this.originClazz = originClazz;
@@ -55,6 +67,18 @@ public class PropertyPath<ORIGIN, TARGET> {
 	return nameInParent;
     }
 
+    public <M extends PropertyPath<ORIGIN, TARGET>> M _downcast(Class<M> downclazz) {
+
+	try {
+	    Constructor<M> constructor = downclazz.getConstructor(Class.class, PropertyPath.class, String.class, String.class, Method[].class, Method.class,
+		    Class.class);
+	    // constructor.
+	} catch (Exception e) {
+	    throw new RuntimeException(e);
+	}
+	return null;
+    }
+
     private static final java.util.Map<String, Method> targetClassAndNameInParent2Setter = new java.util.HashMap<String, Method>();
 
     private static Method getSetter(Class<?> parentTargetClass, String nameInParent, Class<?> typeInParent) {
@@ -74,7 +98,7 @@ public class PropertyPath<ORIGIN, TARGET> {
 	return setter;
     }
 
-    private static Method[] EMPTY_METHOD_ARRAY = new Method[0];
+    private static final Method[] EMPTY_METHOD_ARRAY = new Method[0];
     private static final Map<String, Method[]> originClassAndFullPath2GetterArray = new HashMap<String, Method[]>();
 
     private static Method[] getGetters(Class<?> originClass, String fullPath, PropertyPath<?, ?> parent, String nameInParent) {
