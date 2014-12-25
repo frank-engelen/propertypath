@@ -96,8 +96,15 @@ public class PropertyPathIntegrationTest {
 	final Person p = new Person();
 	p.setAddress(address);
 
+	// This would be better. But no use of .class literal seems to be possible
+	// UsAddressProperties<Person, UsAddress>.class is illegal
+
+	// Class<UsAddressProperties<Person, UsAddress>> cl = null;
+
+	@SuppressWarnings({ "rawtypes" })
+	final Class<UsAddressProperties> cl = UsAddressProperties.class;
 	@SuppressWarnings("unchecked")
-	final Object readState = Person.PROPERTIES.address._downcast(UsAddressProperties.class).state.get(p);
+	final Object readState = Person.PROPERTIES.address._downcast(cl).state.get(p);
 	Assert.assertEquals("TX", readState);
     }
 
