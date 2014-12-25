@@ -109,6 +109,16 @@ public class PropertyPathIntegrationTest {
     }
 
     @Test
+    public void startsWithShouldWork() {
+	final PropertyPath<Person, String> namePath = Person.PROPERTIES.name;
+	final PropertyPath<Person, String> cityPath = Person.PROPERTIES.address.city;
+	final PropertyPath<Person, Address> addressPath = Person.PROPERTIES.address;
+
+	Assert.assertTrue(cityPath.startsWith(addressPath));
+	Assert.assertFalse(namePath.startsWith(addressPath));
+    }
+
+    @Test
     public void serializationShouldWork() {
 	final PropertyPath<Person, String> namePathOrig = Person.PROPERTIES.name;
 	final PropertyPath<Person, String> cityPathOrig = Person.PROPERTIES.address.city;

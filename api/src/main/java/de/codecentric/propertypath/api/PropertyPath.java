@@ -264,4 +264,8 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
 	    throw new RuntimeException(e);
 	}
     }
+
+    public boolean startsWith(PropertyPath<ORIGIN, ?> subPath) {
+	return this.fullPath.startsWith(subPath.fullPath) && sameOriginClass(subPath);
+    }
 }
