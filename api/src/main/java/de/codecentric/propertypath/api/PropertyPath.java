@@ -22,7 +22,6 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
     private final Class<?> typeInParent;
     private transient Method[] methods;
     private transient Method setter;
-    private Class<?> targetClass;
     private transient boolean initDone;
 
     public PropertyPath(Class<ORIGIN> originClazz, PropertyPath<ORIGIN, ?> parent, String nameInParent, Class<?> typeInParent) {
@@ -52,11 +51,9 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
 	    if (parent == null) {
 		methods = null;
 		setter = null;
-		targetClass = originClazz;
 	    } else {
 		methods = getGetters(originClazz, fullPath, parent, nameInParent);
-		setter = getSetter(parent.targetClass, nameInParent, typeInParent);
-		targetClass = typeInParent;
+		setter = getSetter(parent.typeInParent, nameInParent, typeInParent);
 	    }
 	    initDone = true;
 	}
@@ -112,7 +109,7 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
 
 	Method[] getters = originClassAndFullPath2GetterArray.get(key);
 	if (getters == null) {
-	    final Method getter = getGetter(parent.targetClass, nameInParent);
+	    final Method getter = getGetter(parent.typeInParent, nameInParent);
 	    if (getter == null) {
 		getters = EMPTY_METHOD_ARRAY;
 	    } else {
@@ -152,7 +149,7 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
 
     @Override
     public String toString() {
-	return originClazz.getName() + "::" + fullPath + "/" + (setter != null ? setter.getName() : "n/a") + " (" + targetClass.getName() + ")";
+	return originClazz.getName() + "::" + fullPath + "/" + (setter != null ? setter.getName() : "n/a") + " (" + typeInParent.getName() + ")";
     }
 
     public TARGET get(ORIGIN instance) {
@@ -237,7 +234,7 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
     }
 
     public boolean sameTargetClass(PropertyPath<?, ?> other) {
-	return other != null && this.targetClass.equals(other.targetClass);
+	return other != null && this.typeInParent.equals(other.typeInParent);
     }
 
     protected static <T extends Serializable> T deepCopy(T source) {

@@ -14,6 +14,7 @@ import org.junit.Test;
 
 import de.codecentric.propertypath.api.PropertyPath;
 import de.codecentric.propertypath.demolib.Address;
+import de.codecentric.propertypath.demolib.AddressProperties;
 import de.codecentric.propertypath.demolib.UsAddress;
 import de.codecentric.propertypath.demolib.UsAddressProperties;
 
@@ -52,7 +53,10 @@ public class PropertyPathIntegrationTest {
 	final PropertyPath<Person, String> namePath = Person.PROPERTIES.name;
 	final PropertyPath<Person, String> cityPath = Person.PROPERTIES.address.city;
 	final PropertyPath<Person, String> namePath2 = PersonProperties.newPersonProperties().name;
-	final PropertyPath<Person, String> cityPath2 = PersonProperties.newPersonProperties().address.city;
+	final AddressProperties<Person, Address> addressProperties = PersonProperties.newPersonProperties().address;
+	final PropertyPath<Person, String> cityPath2 = addressProperties.city;
+	addressProperties.get(null);
+	cityPath.get(null);
 
 	Assert.assertTrue(namePath.equals(namePath2));
 	Assert.assertTrue(namePath.hashCode() == namePath2.hashCode());
