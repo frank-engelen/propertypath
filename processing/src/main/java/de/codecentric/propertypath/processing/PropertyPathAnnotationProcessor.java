@@ -101,6 +101,9 @@ public class PropertyPathAnnotationProcessor extends AbstractProcessor {
 	    println();
 	    final String superClass = getSuperClass(e);
 	    println("public class " + propsClassNameSimple + "<ORIGIN,TARGET> extends " + superClass + " {");
+	    println();
+	    println("    private static final long serialVersionUID = 1L;");
+	    println();
 	    println(builderAttributes.toString());
 
 	    println("    public static " + propsClassNameSimple + "<" + e.getSimpleName() + ", " + e.getSimpleName() + ">  new" + propsClassNameSimple + "() {");
@@ -111,17 +114,16 @@ public class PropertyPathAnnotationProcessor extends AbstractProcessor {
 	    // Normal-Constructor
 	    println("    public " + propsClassNameSimple
 		    + "(Class<ORIGIN> rootType, PropertyPath<ORIGIN,?> parent, String nameInParent, Class<?> typeInParent) {");
-	    println("        super(rootType, parent, nameInParent, typeInParent);");
+	    println("        super(rootType, parent, nameInParent, typeInParent == null ? " + e.getSimpleName() + ".class : typeInParent);");
 	    println(builderConstructor.toString());
 	    println("    }");
-
-	    // Copy-Constructor for Downcast
-	    println("    public "
-		    + propsClassNameSimple
-		    + "(Class<ORIGIN> rootType, PropertyPath<ORIGIN, ?> parent, String nameInParent, String fullPath, java.lang.reflect.Method[] methods, java.lang.reflect.Method setter, Class<?> targetClass) {");
-	    println("        super(rootType, parent, nameInParent, fullPath, methods, setter, targetClass);");
-	    println(builderConstructor.toString());
-	    println("    }");
+	    //
+	    // // Copy-Constructor for Downcast
+	    // println("    public " + propsClassNameSimple
+	    // + "(Class<ORIGIN> rootType, PropertyPath<ORIGIN, ?> parent, String nameInParent, String fullPath, Class<?> targetClass) {");
+	    // println("        super(rootType, parent, nameInParent, fullPath, targetClass);");
+	    // println(builderConstructor.toString());
+	    // println("    }");
 
 	    println("}");
 	    pw.flush();

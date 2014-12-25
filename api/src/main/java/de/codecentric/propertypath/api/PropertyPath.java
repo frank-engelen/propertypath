@@ -1,36 +1,35 @@
 package de.codecentric.propertypath.api;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PropertyPath<ORIGIN, TARGET> {
+public class PropertyPath<ORIGIN, TARGET> implements Serializable {
 
+    private static final long serialVersionUID = 1L;
     private final PropertyPath<ORIGIN, ?> parent;
     private final String nameInParent;
     private final String fullPath;
     private final Class<?> originClazz;
-    private final Method[] methods;
-    private final Method setter;
-    private final Class<?> targetClass;
-
-    public PropertyPath(Class<?> originClazz, PropertyPath<ORIGIN, ?> parent, String nameInParent, String fullPath, Method[] methods, Method setter,
-	    Class<?> targetClass) {
-	this.originClazz = originClazz;
-	this.parent = parent;
-	this.nameInParent = nameInParent;
-	this.fullPath = fullPath;
-	this.methods = methods;
-	this.setter = setter;
-	this.targetClass = targetClass;
-    }
+    private final Class<?> typeInParent;
+    private transient Method[] methods;
+    private transient Method setter;
+    private Class<?> targetClass;
+    private transient boolean initDone;
 
     public PropertyPath(Class<ORIGIN> originClazz, PropertyPath<ORIGIN, ?> parent, String nameInParent, Class<?> typeInParent) {
 	this.originClazz = originClazz;
 	this.parent = parent;
 	this.nameInParent = nameInParent;
+	this.typeInParent = typeInParent;
 
 	if (parent == null && nameInParent == null) {
 	    this.fullPath = "";
@@ -43,15 +42,23 @@ public class PropertyPath<ORIGIN, TARGET> {
 	} else {
 	    this.fullPath = nameInParent;
 	}
+    }
 
-	if (parent == null) {
-	    methods = null;
-	    setter = null;
-	    targetClass = originClazz;
-	} else {
-	    methods = getGetters(originClazz, fullPath, parent, nameInParent);
-	    setter = getSetter(parent.targetClass, nameInParent, typeInParent);
-	    targetClass = typeInParent;
+    private final void init() {
+	if (parent != null) {
+	    parent.init();
+	}
+	if (!initDone) {
+	    if (parent == null) {
+		methods = null;
+		setter = null;
+		targetClass = originClazz;
+	    } else {
+		methods = getGetters(originClazz, fullPath, parent, nameInParent);
+		setter = getSetter(parent.targetClass, nameInParent, typeInParent);
+		targetClass = typeInParent;
+	    }
+	    initDone = true;
 	}
     }
 
@@ -67,16 +74,15 @@ public class PropertyPath<ORIGIN, TARGET> {
 	return nameInParent;
     }
 
-    public <M extends PropertyPath<ORIGIN, TARGET>> M _downcast(Class<M> downclazz) {
+    public <NEW_TARGET, M extends PropertyPath<ORIGIN, NEW_TARGET>> M _downcast(Class<M> downclazz) {
 
 	try {
-	    Constructor<M> constructor = downclazz.getConstructor(Class.class, PropertyPath.class, String.class, String.class, Method[].class, Method.class,
-		    Class.class);
-	    // constructor.
+	    Constructor<M> constructor = downclazz.getConstructor(Class.class, PropertyPath.class, String.class, Class.class);
+	    M instance = constructor.newInstance(originClazz, parent, nameInParent, null);
+	    return instance;
 	} catch (Exception e) {
 	    throw new RuntimeException(e);
 	}
-	return null;
     }
 
     private static final java.util.Map<String, Method> targetClassAndNameInParent2Setter = new java.util.HashMap<String, Method>();
@@ -144,70 +150,14 @@ public class PropertyPath<ORIGIN, TARGET> {
 	return nameInParent.substring(0, 1).toUpperCase() + nameInParent.substring(1);
     }
 
-    //
-    // private final Method getSetter() {
-    // final Method last = methods[methods.length - 1];
-    // final String nameOfLast = last.getName();
-    //
-    // final String key = this.targetClass.getName() + "#" + nameOfLast;
-    // Method setter = classAndGetter2Setter.get(key);
-    // if (setter != null) {
-    // return setter;
-    // }
-    //
-    // String nameOfSetter = getNameOfSetter(nameOfLast);
-    //
-    // if (nameOfSetter != null) {
-    // try {
-    // setter = targetClass.getMethod(nameOfSetter, last.getReturnType());
-    // } catch (SecurityException e) {
-    // // implies no setter
-    // } catch (NoSuchMethodException e) {
-    // // implies no setter
-    // }
-    // }
-    //
-    // classAndGetter2Setter.put(key, setter);
-    //
-    // return setter;
-    // }
-    //
-    // protected static String getNameOfSetter(final String nameOfLast) {
-    // String nameOfSetter = null;
-    // if (nameOfLast.startsWith("get") || nameOfLast.startsWith("are")) {
-    // nameOfSetter = "set" + nameOfLast.substring(3);
-    // } else if (nameOfLast.startsWith("is")) {
-    // nameOfSetter = "set" + nameOfLast.substring(2);
-    // } else {
-    // nameOfSetter = nameOfLast;
-    // }
-    // return nameOfSetter;
-    // }
-    //
-    // private static class Info {
-    // private final Class<?> clazz;
-    // private List<Method> methods = new java.util.ArrayList<Method>();
-    //
-    // public Info(Class<?> clazz) {
-    // this.clazz = clazz;
-    // }
-    //
-    // public List<Method> getMethods() {
-    // return methods;
-    // }
-    //
-    // public Class<?> getClazz() {
-    // return clazz;
-    // }
-    //
-    // }
-
     @Override
     public String toString() {
 	return originClazz.getName() + "::" + fullPath + "/" + (setter != null ? setter.getName() : "n/a") + " (" + targetClass.getName() + ")";
     }
 
     public TARGET get(ORIGIN instance) {
+	init();
+
 	if (instance == null) {
 	    return null;
 	}
@@ -235,6 +185,8 @@ public class PropertyPath<ORIGIN, TARGET> {
     }
 
     public void set(ORIGIN instance, TARGET value) {
+	init();
+
 	if (instance == null || setter == null) {
 	    return;
 	}
@@ -286,5 +238,33 @@ public class PropertyPath<ORIGIN, TARGET> {
 
     public boolean sameTargetClass(PropertyPath<?, ?> other) {
 	return other != null && this.targetClass.equals(other.targetClass);
+    }
+
+    protected static <T extends Serializable> T deepCopy(T source) {
+	if (source == null) {
+	    return null;
+	}
+
+	try {
+	    final ByteArrayOutputStream bos = new ByteArrayOutputStream(2048);
+	    final ObjectOutputStream oos = new ObjectOutputStream(bos);
+	    oos.writeObject(source);
+	    oos.flush();
+	    oos.close();
+	    bos.flush();
+	    bos.close();
+
+	    final ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
+	    final ObjectInputStream ois = new ObjectInputStream(bis);
+
+	    @SuppressWarnings("unchecked")
+	    T destination = (T) ois.readObject();
+
+	    return destination;
+	} catch (IOException e) {
+	    throw new RuntimeException(e);
+	} catch (ClassNotFoundException e) {
+	    throw new RuntimeException(e);
+	}
     }
 }

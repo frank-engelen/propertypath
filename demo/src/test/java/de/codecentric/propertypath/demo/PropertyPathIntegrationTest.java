@@ -1,5 +1,11 @@
 package de.codecentric.propertypath.demo;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -87,7 +93,60 @@ public class PropertyPathIntegrationTest {
 	p.setAddress(address);
 
 	@SuppressWarnings("unchecked")
-	Object readState = Person.PROPERTIES.address._downcast(UsAddressProperties.class).state.get(p);
+	final Object readState = Person.PROPERTIES.address._downcast(UsAddressProperties.class).state.get(p);
 	Assert.assertEquals("TX", readState);
+    }
+
+    @Test
+    public void serializationShouldWork() {
+	final PropertyPath<Person, String> namePathOrig = Person.PROPERTIES.name;
+	final PropertyPath<Person, String> cityPathOrig = Person.PROPERTIES.address.city;
+
+	final PropertyPath<Person, String> namePath = deepCopy(namePathOrig);
+	final PropertyPath<Person, String> cityPath = deepCopy(cityPathOrig);
+
+	Person person = new Person();
+	person.setAddress(new Address());
+
+	// Write direct - read via path
+	person.setName("Jim");
+	person.getAddress().setCity("Ratingen");
+	Assert.assertEquals("Jim", namePath.get(person));
+	Assert.assertEquals("Ratingen", cityPath.get(person));
+
+	// Write via path - read direct
+	namePath.set(person, "Tom");
+	cityPath.set(person, "Essen");
+	Assert.assertEquals("Tom", person.getName());
+	Assert.assertEquals("Essen", person.getAddress().getCity());
+
+    }
+
+    private <T extends Serializable> T deepCopy(T source) {
+	if (source == null) {
+	    return null;
+	}
+
+	try {
+	    final ByteArrayOutputStream bos = new ByteArrayOutputStream(2048);
+	    final ObjectOutputStream oos = new ObjectOutputStream(bos);
+	    oos.writeObject(source);
+	    oos.flush();
+	    oos.close();
+	    bos.flush();
+	    bos.close();
+
+	    final ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
+	    final ObjectInputStream ois = new ObjectInputStream(bis);
+
+	    @SuppressWarnings("unchecked")
+	    T destination = (T) ois.readObject();
+
+	    return destination;
+	} catch (IOException e) {
+	    throw new RuntimeException(e);
+	} catch (ClassNotFoundException e) {
+	    throw new RuntimeException(e);
+	}
     }
 }
