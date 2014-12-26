@@ -14,6 +14,8 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
@@ -74,8 +76,8 @@ public class PropertyPathAnnotationProcessor extends AbstractProcessor {
 		    continue;
 		}
 
-		final String simpleNameAttribute = inner.getSimpleName().toString();
-		final TypeMirror innerType = inner.asType();
+		final String simpleNameAttribute = getNameOfProperty(inner);
+		final TypeMirror innerType = getTypeOfProperty(inner);
 		final Element innerElement = processingEnv.getTypeUtils().asElement(innerType);
 
 		String fqnPMType = PropertyPath.class.getName();
@@ -133,11 +135,30 @@ public class PropertyPathAnnotationProcessor extends AbstractProcessor {
 	}
     }
 
+    protected TypeMirror getTypeOfProperty(Element inner) {
+	if (inner instanceof ExecutableElement) {
+	    return ((ExecutableElement) inner).getReturnType();
+	}
+	return inner.asType();
+    }
+
+    protected String getNameOfProperty(Element inner) {
+	final String name = inner.getSimpleName().toString();
+	if (name.startsWith("get")) {
+	    return transformGetterName2PropertyName(name);
+	}
+	return name;
+    }
+
+    protected String transformGetterName2PropertyName(String name) {
+	return name.substring(3, 4).toLowerCase() + name.substring(4);
+    }
+
     private String getSuperClass(Element e) {
 
 	final Types typeUtils = processingEnv.getTypeUtils();
 
-	final List<? extends TypeMirror> supertypes = typeUtils.directSupertypes(e.asType());
+	final List<? extends TypeMirror> supertypes = typeUtils.directSupertypes(getTypeOfProperty(e));
 	for (TypeMirror superType : supertypes) {
 	    if (superType.toString().equals("java.lang.Object")) {
 		continue;
@@ -155,7 +176,9 @@ public class PropertyPathAnnotationProcessor extends AbstractProcessor {
 	    }
 
 	    final Element superElement = typeUtils.asElement(superType);
-	    return getSuperClass(superElement);
+	    if (superElement.getKind() == ElementKind.CLASS) {
+		return getSuperClass(superElement);
+	    }
 	}
 
 	return "PropertyPath<ORIGIN,TARGET>";

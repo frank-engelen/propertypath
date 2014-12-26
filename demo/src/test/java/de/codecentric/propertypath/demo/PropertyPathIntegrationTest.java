@@ -42,6 +42,21 @@ public class PropertyPathIntegrationTest {
     }
 
     @Test
+    public void pathesToGetterShouldWork() {
+	final PropertyPath<Person, String> fullNamePath = Person.PROPERTIES.fullName;
+
+	Person person = new Person();
+	person.setName("Jim");
+	person.setSurname("Miller");
+
+	Assert.assertEquals("Jim Miller", fullNamePath.get(person));
+
+	// Silently ignored because there ist no fullName-setter
+	fullNamePath.set(person, "Tom Smith");
+	Assert.assertEquals("Jim", person.getName());
+    }
+
+    @Test
     public void startOfPathMeansIdentity() {
 	Person person = new Person();
 
@@ -116,6 +131,20 @@ public class PropertyPathIntegrationTest {
 
 	Assert.assertTrue(cityPath.startsWith(addressPath));
 	Assert.assertFalse(namePath.startsWith(addressPath));
+    }
+
+    @Test
+    public void endsWithShouldWork() {
+	final PropertyPath<Person, String> personCityPath = Person.PROPERTIES.address.city;
+	final PropertyPath<Address, String> addressCityPath = Address.PROPERTIES.city;
+	final PropertyPath<Person, String> namePath = Person.PROPERTIES.name;
+
+	Assert.assertTrue(personCityPath.endsWith(addressCityPath));
+	Assert.assertFalse(personCityPath.endsWith(namePath));
+
+	final PropertyPath<UsAddress, String> usAddressCityPath = UsAddressProperties.newUsAddressProperties().city;
+	Assert.assertTrue(personCityPath.endsWith(usAddressCityPath));
+
     }
 
     @Test

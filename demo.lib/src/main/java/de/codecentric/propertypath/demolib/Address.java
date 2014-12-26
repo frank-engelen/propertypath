@@ -6,6 +6,8 @@ import de.codecentric.propertypath.api.WithProperties;
 @WithProperties
 public class Address {
 
+    public static final AddressProperties<Address, Address> PROPERTIES = AddressProperties.newAddressProperties();
+
     @Property
     private String streetAndNumber;
 

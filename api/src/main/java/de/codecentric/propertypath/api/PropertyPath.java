@@ -235,4 +235,12 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
     public boolean startsWith(PropertyPath<ORIGIN, ?> subPath) {
 	return this.fullPath.startsWith(subPath.fullPath) && sameOriginClass(subPath);
     }
+
+    public boolean endsWith(PropertyPath<?, ?> subPath) {
+	if (!this.fullPath.endsWith(subPath.fullPath)) {
+	    return false;
+	}
+
+	return true;
+    }
 }

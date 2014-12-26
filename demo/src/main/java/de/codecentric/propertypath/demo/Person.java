@@ -22,6 +22,11 @@ public class Person {
 	return name;
     }
 
+    @Property
+    public String getFullName() {
+	return name + " " + surname;
+    }
+
     public void setName(String name) {
 	this.name = name;
     }
