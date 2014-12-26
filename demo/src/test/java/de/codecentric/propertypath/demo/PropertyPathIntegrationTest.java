@@ -57,7 +57,7 @@ public class PropertyPathIntegrationTest {
     }
 
     @Test
-    public void startOfPathMeansIdentity() {
+    public void getOnStartOfPathMeansIdentity() {
 	Person person = new Person();
 
 	Assert.assertTrue(person == Person.PROPERTIES.get(person));
@@ -80,6 +80,12 @@ public class PropertyPathIntegrationTest {
 
 	Assert.assertFalse(namePath.equals(cityPath));
 	Assert.assertFalse(namePath.hashCode() == cityPath.hashCode());
+	Assert.assertFalse(namePath.equals("name"));
+
+	final PropertyPath<OtherPerson, String> otherPersonCityPath = OtherPerson.PROPERTIES.address.city;
+	Assert.assertFalse(otherPersonCityPath.equals(cityPath));
+	Assert.assertTrue(otherPersonCityPath.getFullPath().equals(cityPath.getFullPath()));
+
     }
 
     @Test
@@ -113,8 +119,7 @@ public class PropertyPathIntegrationTest {
 
 	// This would be better. But no use of .class literal seems to be possible
 	// UsAddressProperties<Person, UsAddress>.class is illegal
-
-	// Class<UsAddressProperties<Person, UsAddress>> cl = null;
+	// Class<UsAddressProperties<Person, UsAddress>> cl = UsAddressProperties<Person, UsAddress>.class;
 
 	@SuppressWarnings({ "rawtypes" })
 	final Class<UsAddressProperties> cl = UsAddressProperties.class;
@@ -131,6 +136,17 @@ public class PropertyPathIntegrationTest {
 
 	Assert.assertTrue(cityPath.startsWith(addressPath));
 	Assert.assertFalse(namePath.startsWith(addressPath));
+
+	final PropertyPath<YetAnotherPerson, String> yetAnotherPersonCityPath = YetAnotherPerson.PROPERTIES.address.city;
+	Assert.assertFalse(yetAnotherPersonCityPath.startsWith(addressPath));
+	Assert.assertTrue(yetAnotherPersonCityPath.getFullPath().startsWith(addressPath.getFullPath()));
+    }
+
+    @Test
+    public void lengthShouldWork() {
+	Assert.assertEquals(0, Person.PROPERTIES._length());
+	Assert.assertEquals(1, Person.PROPERTIES.address._length());
+	Assert.assertEquals(2, Person.PROPERTIES.address.city._length());
     }
 
     @Test
@@ -145,6 +161,8 @@ public class PropertyPathIntegrationTest {
 	final PropertyPath<UsAddress, String> usAddressCityPath = UsAddressProperties.newUsAddressProperties().city;
 	Assert.assertTrue(personCityPath.endsWith(usAddressCityPath));
 
+	// final PropertyPath<YetAnotherPerson, String> yetAnotherPersonCityPath = YetAnotherPerson.PROPERTIES.address.city;
+	// Assert.assertFalse(yetAnotherPersonCityPath.endsWith(addressCityPath));
     }
 
     @Test

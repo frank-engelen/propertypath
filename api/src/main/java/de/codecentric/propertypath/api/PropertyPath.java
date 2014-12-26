@@ -15,6 +15,7 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
     private final String fullPath;
     private final Class<?> originClazz;
     private final Class<?> typeInParent;
+    private final int length;
     private transient Method[] methods;
     private transient Method setter;
     private transient boolean initDone;
@@ -27,15 +28,21 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
 
 	if (parent == null && nameInParent == null) {
 	    this.fullPath = "";
+	    length = 0;
 	} else if (parent == null && nameInParent != null) {
 	    this.fullPath = nameInParent;
+	    length = 1;
 	} else if (parent != null && parent.fullPath.isEmpty() && nameInParent != null) {
 	    this.fullPath = nameInParent;
+	    length = 1;
 	} else if (parent != null) {
 	    this.fullPath = parent.fullPath + "." + nameInParent;
+	    length = parent._length() + 1;
 	} else {
 	    this.fullPath = nameInParent;
+	    length = 1;
 	}
+
     }
 
     private final void init() {
@@ -232,7 +239,7 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
 	return other != null && this.typeInParent.equals(other.typeInParent);
     }
 
-    public boolean startsWith(PropertyPath<ORIGIN, ?> subPath) {
+    public boolean startsWith(PropertyPath<?, ?> subPath) {
 	return this.fullPath.startsWith(subPath.fullPath) && sameOriginClass(subPath);
     }
 
@@ -242,5 +249,9 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
 	}
 
 	return true;
+    }
+
+    public int _length() {
+	return length;
     }
 }
