@@ -1,5 +1,7 @@
 package de.codecentric.propertypath.demo;
 
+import java.util.List;
+
 import de.codecentric.propertypath.api.Property;
 import de.codecentric.propertypath.api.WithProperties;
 import de.codecentric.propertypath.demolib.Address;
@@ -17,6 +19,15 @@ public class Person {
 
     @Property
     private Address address;
+
+    @Property
+    private List<String> type;
+
+    @Property
+    private boolean active;
+
+    @Property
+    private int age;
 
     public String getName() {
 	return name;
