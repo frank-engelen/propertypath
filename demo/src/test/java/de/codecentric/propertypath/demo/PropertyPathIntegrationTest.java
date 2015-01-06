@@ -190,6 +190,19 @@ public class PropertyPathIntegrationTest {
 
     }
 
+    @Test
+    public void extendsShouldWork() {
+
+	// "number" is individually declared in Subclass1 and Subclass2 => it isn't "equal"
+	Assert.assertFalse(PersonSubclass1.PROPERTIES.number.equals(PersonSubclass2.PROPERTIES.number));
+
+	// "address.city" is inherited from Person into Subclass1 and Subclass2 => it is "equal"
+	final PropertyPath<PersonSubclass1, String> city1 = PersonSubclass1.PROPERTIES.address.city;
+	final PropertyPath<PersonSubclass2, String> city2 = PersonSubclass2.PROPERTIES.address.city;
+	Assert.assertTrue(city1.equals(city2));
+
+    }
+
     private <T extends Serializable> T deepCopy(T source) {
 	if (source == null) {
 	    return null;
