@@ -3,7 +3,6 @@ package de.codecentric.propertypath.processing;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -16,6 +15,7 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
@@ -39,90 +39,99 @@ public class PropertyPathAnnotationProcessor extends AbstractProcessor {
 
 	Set<? extends Element> elements = roundEnv.getElementsAnnotatedWith(WithProperties.class);
 
-	for (Element e : elements) {
-	    processingEnv.getMessager().printMessage(Kind.NOTE, "Processing :" + e.toString(), e);
+	for (Element currentElement : elements) {
+	    processingEnv.getMessager().printMessage(Kind.NOTE, "Processing :" + currentElement.toString(), currentElement);
 	    try {
-		handle(e);
+		handle(currentElement);
 	    } catch (IOException e1) {
-		processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, e1.getLocalizedMessage(), e);
+		processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, e1.getLocalizedMessage(), currentElement);
 	    }
 	}
 
 	return true;
     }
 
-    private void handle(Element e) throws IOException {
-	Filer filer = processingEnv.getFiler();
-
-	List<? extends Element> enclosedElements = e.getEnclosedElements();
-	PackageElement packageOf = processingEnv.getElementUtils().getPackageOf(e);
-	String propsClassNameSimple = getPropertyClassName(e);
-	JavaFileObject sourceFile = filer.createSourceFile(packageOf.getQualifiedName() + "." + propsClassNameSimple, e);
-	Writer writer = sourceFile.openWriter();
-	pw = new PrintWriter(writer);
-	println("package " + packageOf.getQualifiedName() + ";");
-	println();
+    private void handle(Element currentElement) throws IOException {
+	final String propsClassNameSimple = getPropertyClassName(currentElement);
 
 	final StringBuilder builderAttributes = new StringBuilder();
-	final StringBuilder builderConstructor = new StringBuilder();
-	final Set<String> importPath = new HashSet<String>();
-	importPath.add(PropertyPath.class.getName());
+	final StringBuilder builderConstructorImpl = new StringBuilder();
 
-	for (Element inner : enclosedElements) {
+	final List<? extends Element> enclosedElementsOfCurrent = currentElement.getEnclosedElements();
+	for (Element propertyElement : enclosedElementsOfCurrent) {
 
-	    final Property annotation = inner.getAnnotation(Property.class);
+	    final Property annotation = propertyElement.getAnnotation(Property.class);
 	    if (annotation == null) {
 		continue;
 	    }
 
-	    final String simpleNameAttribute = getNameOfProperty(inner);
-	    final TypeMirror innerType = getTypeOfProperty(inner);
-	    final Element innerElement = processingEnv.getTypeUtils().asElement(innerType);
+	    final String nameOfProperty = getNameOfProperty(propertyElement);
+	    final TypeMirror typeOfProperty = getTypeOfProperty(propertyElement);
+	    final String fqnPMType = getFqnPropertyPathClassForTypeOfProperty(typeOfProperty);
 
-	    String fqnPMType = PropertyPath.class.getName();
-	    String simpleNamePMType = PropertyPath.class.getSimpleName();
-	    String toAdd = ", " + getWithoutTypeParameter(innerType) + ".class";
-	    if (innerElement != null && innerElement.getAnnotation(WithProperties.class) != null) {
-		simpleNamePMType = getPropertyClassName(innerElement);
-		PackageElement packageOfInner = processingEnv.getElementUtils().getPackageOf(innerElement);
-		fqnPMType = packageOfInner.getQualifiedName() + "." + simpleNamePMType;
-		importPath.add(fqnPMType);
-	    }
+	    // Generate Declaration of a Property-Path-Attribute
+	    builderAttributes.append("    public final " + fqnPMType + "<ORIGIN, " + typeOfProperty + "> " + nameOfProperty + ";\n");
 
-	    builderAttributes.append("    public final " + simpleNamePMType + "<ORIGIN, " + innerType + "> " + simpleNameAttribute + ";\n");
-	    builderConstructor.append("        " + simpleNameAttribute + " = new " + simpleNamePMType + "<ORIGIN, " + innerType + ">(rootType, this, \""
-		    + simpleNameAttribute + "\"" + toAdd + ");\n");
-	    importPath.add(fqnPMType);
+	    // Generate Part of Constructor-Implementation
+	    builderConstructorImpl.append("        " + nameOfProperty + " = new " + fqnPMType + "<ORIGIN, " + typeOfProperty + ">(rootType, this, \""
+		    + nameOfProperty + "\", " + getWithoutTypeParameter(typeOfProperty) + ".class);\n");
 	}
 
-	for (String importLine : importPath) {
-	    println("import " + importLine + ";");
-	}
+	printPropertiesSourceFile(currentElement, propsClassNameSimple, builderAttributes, builderConstructorImpl);
+    }
 
+    private void printPropertiesSourceFile(Element currentElement, String propsClassNameSimple, final StringBuilder builderAttributes,
+	    final StringBuilder builderConstructorImpl) throws IOException {
+	final Filer filer = processingEnv.getFiler();
+	final Name simpleNameCurrentElement = currentElement.getSimpleName();
+
+	final PackageElement packageOf = processingEnv.getElementUtils().getPackageOf(currentElement);
+	final JavaFileObject sourceFile = filer.createSourceFile(packageOf.getQualifiedName() + "." + propsClassNameSimple, currentElement);
+	final Writer writer = sourceFile.openWriter();
+	pw = new PrintWriter(writer);
+
+	// Start of File
+	println("package " + packageOf.getQualifiedName() + ";");
 	println();
-	final String superClass = getSuperClass(e);
-	println("public class " + propsClassNameSimple + "<ORIGIN,TARGET> extends " + superClass + " {");
+
+	// Start of class declaration
+	println("public class " + propsClassNameSimple + "<ORIGIN,TARGET> extends " + getSuperClass(currentElement) + " {");
 	println();
 	println("    private static final long serialVersionUID = 1L;");
 	println();
 	println(builderAttributes.toString());
 
-	println("    public static " + propsClassNameSimple + "<" + e.getSimpleName() + ", " + e.getSimpleName() + ">  new" + propsClassNameSimple + "() {");
-	println("        return new " + propsClassNameSimple + "<" + e.getSimpleName() + ", " + e.getSimpleName() + ">(" + e.getSimpleName()
-		+ ".class, null, null, " + e.getSimpleName() + ".class);");
+	// Factory-Method "newXYProperties"
+	final String starttype = propsClassNameSimple + "<" + simpleNameCurrentElement + ", " + simpleNameCurrentElement + ">";
+	println("    public static " + starttype + " new" + propsClassNameSimple + "() {");
+	println("        return new " + starttype + "(" + simpleNameCurrentElement + ".class, null, null, " + simpleNameCurrentElement + ".class);");
+	println("    }");
+	println();
+
+	// Constructor
+	println("    public " + propsClassNameSimple + "(Class<ORIGIN> rootType, " + PropertyPath.class.getName()
+		+ "<ORIGIN,?> parent, String nameInParent, Class<?> typeInParent) {");
+	println("        super(rootType, parent, nameInParent, typeInParent == null ? " + simpleNameCurrentElement + ".class : typeInParent);");
+	println();
+	println(builderConstructorImpl.toString());
 	println("    }");
 
-	// Normal-Constructor
-	println("    public " + propsClassNameSimple + "(Class<ORIGIN> rootType, PropertyPath<ORIGIN,?> parent, String nameInParent, Class<?> typeInParent) {");
-	println("        super(rootType, parent, nameInParent, typeInParent == null ? " + e.getSimpleName() + ".class : typeInParent);");
-	println(builderConstructor.toString());
-	println("    }");
-
+	// End-of-class
 	println("}");
 	pw.flush();
-
 	writer.flush();
 	writer.close();
+    }
+
+    private String getFqnPropertyPathClassForTypeOfProperty(final TypeMirror typeOfProperty) {
+	final Element elementOfTypeOfProperty = processingEnv.getTypeUtils().asElement(typeOfProperty);
+	String fqnPMType = PropertyPath.class.getName();
+	if (elementOfTypeOfProperty != null && elementOfTypeOfProperty.getAnnotation(WithProperties.class) != null) {
+	    final String simpleNamePMType = getPropertyClassName(elementOfTypeOfProperty);
+	    final PackageElement packageOfInner = processingEnv.getElementUtils().getPackageOf(elementOfTypeOfProperty);
+	    fqnPMType = packageOfInner.getQualifiedName() + "." + simpleNamePMType;
+	}
+	return fqnPMType;
     }
 
     private String getWithoutTypeParameter(TypeMirror innerType) {
@@ -183,7 +192,6 @@ public class PropertyPathAnnotationProcessor extends AbstractProcessor {
 		PackageElement packageOf = processingEnv.getElementUtils().getPackageOf(superElement);
 		final String packageName = packageOf == null ? "" : packageOf.getQualifiedName() + ".";
 		return packageName + getPropertyClassName(superElement) + "<ORIGIN, TARGET>";
-		// return getPropertyClassName(superElement) + "<ORIGIN, TARGET>";
 	    }
 	}
 
@@ -198,7 +206,7 @@ public class PropertyPathAnnotationProcessor extends AbstractProcessor {
 	    }
 	}
 
-	return "PropertyPath<ORIGIN,TARGET>";
+	return PropertyPath.class.getName() + "<ORIGIN,TARGET>";
     }
 
     private String getPropertyClassName(Element e) {
