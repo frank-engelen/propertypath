@@ -73,8 +73,9 @@ public class PropertyPathAnnotationProcessor extends AbstractProcessor {
 	    builderAttributes.append("    public final " + fqnPMType + "<ORIGIN, " + typeOfProperty + "> " + nameOfProperty + ";\n");
 
 	    // Generate Part of Constructor-Implementation
+	    final Name simpleNameCurrentElement = currentElement.getSimpleName();
 	    builderConstructorImpl.append("        " + nameOfProperty + " = new " + fqnPMType + "<ORIGIN, " + typeOfProperty + ">(rootType, this, \""
-		    + nameOfProperty + "\", " + getWithoutTypeParameter(typeOfProperty) + ".class);\n");
+		    + nameOfProperty + "\", " + getWithoutTypeParameter(typeOfProperty) + ".class, " + simpleNameCurrentElement + ".class);\n");
 	}
 
 	printPropertiesSourceFile(currentElement, propsClassNameSimple, builderAttributes, builderConstructorImpl);
@@ -104,14 +105,14 @@ public class PropertyPathAnnotationProcessor extends AbstractProcessor {
 	// Factory-Method "newXYProperties"
 	final String starttype = propsClassNameSimple + "<" + simpleNameCurrentElement + ", " + simpleNameCurrentElement + ">";
 	println("    public static " + starttype + " new" + propsClassNameSimple + "() {");
-	println("        return new " + starttype + "(" + simpleNameCurrentElement + ".class, null, null, " + simpleNameCurrentElement + ".class);");
+	println("        return new " + starttype + "(" + simpleNameCurrentElement + ".class, null, null, " + simpleNameCurrentElement + ".class, null);");
 	println("    }");
 	println();
 
 	// Constructor
 	println("    public " + propsClassNameSimple + "(Class<ORIGIN> rootType, " + PropertyPath.class.getName()
-		+ "<ORIGIN,?> parent, String nameInParent, Class<?> typeInParent) {");
-	println("        super(rootType, parent, nameInParent, typeInParent == null ? " + simpleNameCurrentElement + ".class : typeInParent);");
+		+ "<ORIGIN,?> parent, String nameInParent, Class<?> typeInParent, Class<?> declaredIn) {");
+	println("        super(rootType, parent, nameInParent, typeInParent == null ? " + simpleNameCurrentElement + ".class : typeInParent, declaredIn);");
 	println();
 	println(builderConstructorImpl.toString());
 	println("    }");

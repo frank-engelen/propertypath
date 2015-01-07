@@ -149,21 +149,21 @@ public class PropertyPathIntegrationTest {
 	Assert.assertEquals(2, Person.PROPERTIES.address.city._length());
     }
 
-    @Test
-    public void endsWithShouldWork() {
-	final PropertyPath<Person, String> personCityPath = Person.PROPERTIES.address.city;
-	final PropertyPath<Address, String> addressCityPath = Address.PROPERTIES.city;
-	final PropertyPath<Person, String> namePath = Person.PROPERTIES.name;
-
-	Assert.assertTrue(personCityPath.endsWith(addressCityPath));
-	Assert.assertFalse(personCityPath.endsWith(namePath));
-
-	final PropertyPath<UsAddress, String> usAddressCityPath = UsAddressProperties.newUsAddressProperties().city;
-	Assert.assertTrue(personCityPath.endsWith(usAddressCityPath));
-
-	// final PropertyPath<YetAnotherPerson, String> yetAnotherPersonCityPath = YetAnotherPerson.PROPERTIES.address.city;
-	// Assert.assertFalse(yetAnotherPersonCityPath.endsWith(addressCityPath));
-    }
+//    @Test
+//    public void endsWithShouldWork() {
+//	final PropertyPath<Person, String> personCityPath = Person.PROPERTIES.address.city;
+//	final PropertyPath<Address, String> addressCityPath = Address.PROPERTIES.city;
+//	final PropertyPath<Person, String> namePath = Person.PROPERTIES.name;
+//
+//	Assert.assertTrue(personCityPath.endsWith(addressCityPath));
+//	Assert.assertFalse(personCityPath.endsWith(namePath));
+//
+//	final PropertyPath<UsAddress, String> usAddressCityPath = UsAddressProperties.newUsAddressProperties().city;
+//	Assert.assertTrue(personCityPath.endsWith(usAddressCityPath));
+//
+//	// final PropertyPath<YetAnotherPerson, String> yetAnotherPersonCityPath = YetAnotherPerson.PROPERTIES.address.city;
+//	// Assert.assertFalse(yetAnotherPersonCityPath.endsWith(addressCityPath));
+//    }
 
     @Test
     public void serializationShouldWork() {
@@ -195,11 +195,13 @@ public class PropertyPathIntegrationTest {
 
 	// "number" is individually declared in Subclass1 and Subclass2 => it isn't "equal"
 	Assert.assertFalse(PersonSubclass1.PROPERTIES.number.equals(PersonSubclass2.PROPERTIES.number));
+	Assert.assertFalse(PersonSubclass1.PROPERTIES.number.startsWith(PersonSubclass2.PROPERTIES.number));
 
 	// "address.city" is inherited from Person into Subclass1 and Subclass2 => it is "equal"
 	final PropertyPath<PersonSubclass1, String> city1 = PersonSubclass1.PROPERTIES.address.city;
 	final PropertyPath<PersonSubclass2, String> city2 = PersonSubclass2.PROPERTIES.address.city;
 	Assert.assertTrue(city1.equals(city2));
+	Assert.assertTrue(city1.startsWith(city2));
 
     }
 
