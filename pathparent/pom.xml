@@ -4,15 +4,17 @@
 
 	<groupId>de.codecentric.propertypath</groupId>
 	<artifactId>pathparent</artifactId>
-	<version>1.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>PARENT</name>
 	<url>http://maven.apache.org</url>
 
 	<properties>
+		<propertypath.version>1.0-SNAPSHOT</propertypath.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
+
+	<version>1.0-SNAPSHOT</version>
 
 	<modules>
 		<module>../api</module>
@@ -21,33 +23,85 @@
 		<module>../demo</module>
 	</modules>
 
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>junit</groupId>
+				<artifactId>junit</artifactId>
+				<version>4.11</version>
+				<scope>test</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>de.codecentric.propertypath</groupId>
+				<artifactId>api</artifactId>
+				<version>${propertypath.version}</version>
+			</dependency>
+			
+			<dependency>
+				<groupId>de.codecentric.propertypath</groupId>
+				<artifactId>demo</artifactId>
+				<version>${propertypath.version}</version>
+			</dependency>
+			
+			<dependency>
+				<groupId>de.codecentric.propertypath</groupId>
+				<artifactId>demo.lib</artifactId>
+				<version>${propertypath.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>de.codecentric.propertypath</groupId>
+				<artifactId>processing</artifactId>
+				<version>${propertypath.version}</version>
+				<scope>provided</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 	<build>
+		<pluginManagement>
 		<plugins>
 			<plugin>
-  				<groupId>org.apache.maven.plugins</groupId>
-  				<artifactId>maven-source-plugin</artifactId>
-  				<executions>
-    				<execution>
-      					<id>attach-sources</id>
-      					<goals>
-        					<goal>jar</goal>
-      					</goals>
-    				</execution>
-  				</executions>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.2</version>
+			</plugin>
+			<plugin>
+				<groupId>org.bsc.maven</groupId>
+				<artifactId>maven-processor-plugin</artifactId>
+				<version>2.2.4</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>2.3</version>
+			</plugin>
+		</plugins>
+		</pluginManagement>
+		
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+					<compilerArgument>-proc:none</compilerArgument>
+				</configuration>
 			</plugin>
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId>
+				<artifactId>maven-source-plugin</artifactId>
 				<executions>
-				    <execution>
-				    	<id>attach-javadocs</id>
-				    	<goals>
-				    		<goal>jar</goal>
-				    	</goals>
-				    </execution>
-			  </executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
+
 </project>
