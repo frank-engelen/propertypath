@@ -51,7 +51,7 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
 			length = 1;
 		} else if (parent != null) {
 			this.fullPath = parent.fullPath + "." + nameInParent;
-			length = parent._length() + 1;
+			length = parent.length() + 1;
 		} else {
 			this.fullPath = nameInParent;
 			length = 1;
@@ -77,6 +77,16 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
 		}
 	}
 
+	public boolean isWritable() {
+		init();
+		return setter != null;
+	}
+
+	public boolean isReadable() {
+		init();
+		return methods != null && methods.length > 0;
+	}
+
 	public PropertyPath<ORIGIN, ?> getParent() {
 		return parent;
 	}
@@ -89,7 +99,7 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
 		return nameInParent;
 	}
 
-	public <NEW_TARGET, M extends PropertyPath<ORIGIN, NEW_TARGET>> M _downcast(
+	public <NEW_TARGET, M extends PropertyPath<ORIGIN, NEW_TARGET>> M downcast(
 			Class<M> downclazz) {
 
 		try {
@@ -186,7 +196,7 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
 	public TARGET get(ORIGIN instance) {
 		init();
 
-		if (instance == null) {
+		if (instance == null || !isReadable()) {
 			return null;
 		}
 
@@ -212,7 +222,6 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
 		return result;
 	}
 
-
 	public TARGET getNullsafe(ORIGIN instance) {
 		init();
 
@@ -226,7 +235,7 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
 				Method m = methods[i];
 				try {
 					current = m.invoke(current);
-					if(current == null) {
+					if (current == null) {
 						return null;
 					}
 				} catch (IllegalArgumentException e) {
@@ -248,7 +257,7 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
 	public void set(ORIGIN instance, TARGET value) {
 		setTypeUnsafe(instance, value);
 	}
-	
+
 	public void setTypeUnsafe(ORIGIN instance, Object value) {
 		init();
 
@@ -305,17 +314,17 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
 		if (arr1 == null || arr2 == null) {
 			return false;
 		}
-		
+
 		int lengthMax = lengthMaxIn;
-		if(lengthMaxIn == -1) {
+		if (lengthMaxIn == -1) {
 			if (arr1.length != arr2.length) {
 				return false;
 			}
 
 			lengthMax = arr1.length;
-		} else if(lengthMaxIn > arr1.length || lengthMaxIn > arr2.length) {
+		} else if (lengthMaxIn > arr1.length || lengthMaxIn > arr2.length) {
 			return false;
-		} 
+		}
 
 		for (int i = 0; i < lengthMax; i++) {
 			final Object o1 = arr1[i];
@@ -343,23 +352,16 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
 	}
 
 	public boolean startsWith(PropertyPath<?, ?> subPath) {
-		
-		if(!this.fullPath.startsWith(subPath.fullPath)) {
+
+		if (!this.fullPath.startsWith(subPath.fullPath)) {
 			return false;
 		}
-		
-		return arraysEquals(this.declaredInChain, subPath.declaredInChain, subPath.declaredInChain.length);
+
+		return arraysEquals(this.declaredInChain, subPath.declaredInChain,
+				subPath.declaredInChain.length);
 	}
 
-//	public boolean endsWith(PropertyPath<?, ?> subPath) {
-//		if (!this.fullPath.endsWith(subPath.fullPath)) {
-//			return false;
-//		}
-//
-//		return true;
-//	}
-
-	public int _length() {
+	public int length() {
 		return length;
 	}
 }

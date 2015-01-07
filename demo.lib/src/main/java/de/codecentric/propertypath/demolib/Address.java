@@ -6,39 +6,47 @@ import de.codecentric.propertypath.api.WithProperties;
 @WithProperties
 public class Address {
 
-    public static final AddressProperties<Address, Address> PROPERTIES = AddressProperties.newAddressProperties();
+	public static final AddressProperties<Address, Address> PROPERTIES = AddressProperties
+			.newAddressProperties();
 
-    @Property
-    private String streetAndNumber;
+	@Property
+	private String streetAndNumber;
 
-    @Property
-    private String city;
+	@Property
+	private String city;
 
-    @Property
-    private String country;
+	@Property
+	private String country;
 
-    public String getStreetAndNumber() {
-	return streetAndNumber;
-    }
+	@Property
+	private String writeOnlyProperty;
 
-    public void setStreetAndNumber(String streetAndNumber) {
-	this.streetAndNumber = streetAndNumber;
-    }
+	public String getStreetAndNumber() {
+		return streetAndNumber;
+	}
 
-    public String getCity() {
-	return city;
-    }
+	public void setStreetAndNumber(String streetAndNumber) {
+		this.streetAndNumber = streetAndNumber;
+	}
 
-    public void setCity(String city) {
-	this.city = city;
-    }
+	public String getCity() {
+		return city;
+	}
 
-    public String getCountry() {
-	return country;
-    }
+	public void setCity(String city) {
+		this.city = city;
+	}
 
-    public void setCountry(String country) {
-	this.country = country;
-    }
+	public String getCountry() {
+		return country;
+	}
+
+	public void setCountry(String country) {
+		this.country = country;
+	}
+	
+	public void setWriteOnlyProperty(String writeOnlyProperty) {
+		this.writeOnlyProperty = writeOnlyProperty;
+	}
 
 }

@@ -54,16 +54,21 @@ public class PropertyPathIntegrationTest {
 
 		Assert.assertEquals("Jim Miller", fullNamePath.get(person));
 
-		// Silently ignored because there ist no fullName-setter
+		// Silently ignored because there is no fullName-setter
 		fullNamePath.set(person, "Tom Smith");
 		Assert.assertEquals("Jim", person.getName());
+
+		// Non-readable-Property should deliver 'null' on read
+		Person person2 = new Person();
+		person2.setWriteOnlyProperty("WRITEONLY");
+		Assert.assertNull(Person.PROPERTIES.writeOnlyProperty.get(person2));
 	}
 
 	@Test
-	public void getOnStartOfPathMeansIdentity() {
+	public void getOnStartOfPathMeansNull() {
 		Person person = new Person();
 
-		Assert.assertTrue(person == Person.PROPERTIES.get(person));
+		Assert.assertTrue(null == Person.PROPERTIES.get(person));
 	}
 
 	@Test
@@ -86,12 +91,12 @@ public class PropertyPathIntegrationTest {
 		Assert.assertFalse(namePath.equals(cityPath));
 		Assert.assertFalse(namePath.hashCode() == cityPath.hashCode());
 		Assert.assertFalse(namePath.equals("name"));
-		//
-		// final PropertyPath<OtherPerson, String> otherPersonCityPath =
-		// OtherPersonProperties.new address.city;
-		// Assert.assertFalse(otherPersonCityPath.equals(cityPath));
-		// Assert.assertTrue(otherPersonCityPath.getFullPath().equals(cityPath.getFullPath()));
 
+		final PropertyPath<OtherPerson, String> otherPersonCityPath = OtherPersonProperties
+				.newOtherPersonProperties().address.city;
+		Assert.assertFalse(otherPersonCityPath.equals(cityPath));
+		Assert.assertTrue(otherPersonCityPath.getFullPath().equals(
+				cityPath.getFullPath()));
 	}
 
 	@Test
@@ -137,7 +142,7 @@ public class PropertyPathIntegrationTest {
 		@SuppressWarnings({ "rawtypes" })
 		final Class<UsAddressProperties> cl = UsAddressProperties.class;
 		@SuppressWarnings("unchecked")
-		final Object readState = Person.PROPERTIES.address._downcast(cl).state
+		final Object readState = Person.PROPERTIES.address.downcast(cl).state
 				.get(p);
 		Assert.assertEquals("TX", readState);
 	}
@@ -151,17 +156,18 @@ public class PropertyPathIntegrationTest {
 		Assert.assertTrue(cityPath.startsWith(addressPath));
 		Assert.assertFalse(namePath.startsWith(addressPath));
 
-		// final PropertyPath<YetAnotherPerson, String> yetAnotherPersonCityPath
-		// = YetAnotherPerson.PROPERTIES.address.city;
-		// Assert.assertFalse(yetAnotherPersonCityPath.startsWith(addressPath));
-		// Assert.assertTrue(yetAnotherPersonCityPath.getFullPath().startsWith(addressPath.getFullPath()));
+		final PropertyPath<YetAnotherPerson, String> yetAnotherPersonCityPath = YetAnotherPersonProperties
+				.newYetAnotherPersonProperties().address.city;
+		Assert.assertFalse(yetAnotherPersonCityPath.startsWith(addressPath));
+		Assert.assertTrue(yetAnotherPersonCityPath.getFullPath().startsWith(
+				addressPath.getFullPath()));
 	}
 
 	@Test
 	public void lengthShouldWork() {
-		Assert.assertEquals(0, Person.PROPERTIES._length());
-		Assert.assertEquals(1, Person.PROPERTIES.address._length());
-		Assert.assertEquals(2, Person.PROPERTIES.address.city._length());
+		Assert.assertEquals(0, Person.PROPERTIES.length());
+		Assert.assertEquals(1, Person.PROPERTIES.address.length());
+		Assert.assertEquals(2, Person.PROPERTIES.address.city.length());
 	}
 
 	// @Test
@@ -257,36 +263,54 @@ public class PropertyPathIntegrationTest {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	@Test
 	public void copyShouldWork() {
 		final Person src = new Person();
 		src.setName("Tom");
 		src.setSurname("Miller");
 		src.setAge(65);
-		
+
 		final Person dest = new Person();
-		
-		final List<PropertyPath<Person, ?>> properties = new ArrayList<PropertyPath<Person,?>>();
+
+		final List<PropertyPath<Person, ?>> properties = new ArrayList<PropertyPath<Person, ?>>();
 		properties.add(Person.PROPERTIES.name);
 		properties.add(Person.PROPERTIES.surname);
-		
+
 		PropertyPathUtils.copy(src, dest, properties);
-		
+
 		Assert.assertEquals("Tom", dest.getName());
 		Assert.assertEquals("Miller", dest.getSurname());
 		Assert.assertEquals(0, dest.getAge());
 	}
-	
+
 	@Test
 	public void nullsafeGetShouldWork() {
 		final Person p = new Person();
 		p.setAddress(new Address());
 		p.getAddress().setCity("Ratingen");
-		
-		Assert.assertEquals("Ratingen", Person.PROPERTIES.address.city.getNullsafe(p));
-	
+
+		Assert.assertEquals("Ratingen",
+				Person.PROPERTIES.address.city.getNullsafe(p));
+
 		p.setAddress(null);
 		Assert.assertEquals(null, Person.PROPERTIES.address.city.getNullsafe(p));
+	}
+
+	@Test
+	public void writableAndReadableShouldWork() {
+		Assert.assertTrue(Person.PROPERTIES.address.isWritable());
+		Assert.assertTrue(Person.PROPERTIES.address.isReadable());
+
+		Assert.assertFalse(Person.PROPERTIES.fullName.isWritable());
+		Assert.assertTrue(Person.PROPERTIES.fullName.isReadable());
+
+		Assert.assertTrue(Person.PROPERTIES.writeOnlyProperty.isWritable());
+		Assert.assertFalse(Person.PROPERTIES.writeOnlyProperty.isReadable());
+
+		Assert.assertTrue(Person.PROPERTIES.address.writeOnlyProperty
+				.isWritable());
+		Assert.assertFalse(Person.PROPERTIES.address.writeOnlyProperty
+				.isReadable());
 	}
 }

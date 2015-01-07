@@ -28,6 +28,9 @@ public class Person {
 
     @Property
     private int age;
+    
+    @Property
+    private String writeOnlyProperty;
 
     public String getName() {
 	return name;
@@ -72,6 +75,10 @@ public class Person {
 
 	public void setAge(int age) {
 		this.age = age;
+	}
+	
+	public void setWriteOnlyProperty(String writeOnlyProperty) {
+		this.writeOnlyProperty = writeOnlyProperty;
 	}
 
 }
