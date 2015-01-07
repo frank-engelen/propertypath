@@ -212,7 +212,44 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
 		return result;
 	}
 
+
+	public TARGET getNullsafe(ORIGIN instance) {
+		init();
+
+		if (instance == null) {
+			return null;
+		}
+
+		Object current = instance;
+		if (methods != null) {
+			for (int i = 0; i < methods.length && current != null; i++) {
+				Method m = methods[i];
+				try {
+					current = m.invoke(current);
+					if(current == null) {
+						return null;
+					}
+				} catch (IllegalArgumentException e) {
+					throw new RuntimeException(e);
+				} catch (IllegalAccessException e) {
+					throw new RuntimeException(e);
+				} catch (InvocationTargetException e) {
+					throw new RuntimeException(e);
+				}
+			}
+		}
+
+		@SuppressWarnings("unchecked")
+		final TARGET result = (TARGET) current;
+
+		return result;
+	}
+
 	public void set(ORIGIN instance, TARGET value) {
+		setTypeUnsafe(instance, value);
+	}
+	
+	public void setTypeUnsafe(ORIGIN instance, Object value) {
 		init();
 
 		if (instance == null || setter == null) {
