@@ -9,57 +9,57 @@ import de.codecentric.propertypath.demolib.Address;
 @WithProperties
 public class Person {
 
-    public static final PersonProperties<Person, Person> PROPERTIES = PersonProperties.newPersonProperties();
+	public static final PersonProperties<Person, Person> PROPERTIES = PersonProperties.newPersonProperties();
 
-    @Property
-    private String name;
+	@Property
+	private String name;
 
-    @Property
-    private String surname;
+	@Property
+	private String surname;
 
-    @Property
-    private Address address;
+	@Property
+	private Address address;
 
-    @Property
-    private List<String> type;
+	@Property
+	private List<String> type;
 
-    @Property
-    private boolean active;
+	@Property
+	private boolean active;
 
-    @Property
-    private int age;
-    
-    @Property
-    private String writeOnlyProperty;
+	@Property
+	private int age;
 
-    public String getName() {
-	return name;
-    }
+	@Property
+	private String writeOnlyProperty;
 
-    @Property
-    public String getFullName() {
-	return name + " " + surname;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setName(String name) {
-	this.name = name;
-    }
+	@Property
+	public String getFullName() {
+		return name + " " + surname;
+	}
 
-    public String getSurname() {
-	return surname;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public void setSurname(String surname) {
-	this.surname = surname;
-    }
+	public String getSurname() {
+		return surname;
+	}
 
-    public Address getAddress() {
-	return address;
-    }
+	public void setSurname(String surname) {
+		this.surname = surname;
+	}
 
-    public void setAddress(Address address) {
-	this.address = address;
-    }
+	public Address getAddress() {
+		return address;
+	}
+
+	public void setAddress(Address address) {
+		this.address = address;
+	}
 
 	public boolean isActive() {
 		return active;
@@ -76,7 +76,7 @@ public class Person {
 	public void setAge(int age) {
 		this.age = age;
 	}
-	
+
 	public void setWriteOnlyProperty(String writeOnlyProperty) {
 		this.writeOnlyProperty = writeOnlyProperty;
 	}

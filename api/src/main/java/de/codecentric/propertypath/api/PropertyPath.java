@@ -21,9 +21,7 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
 	private transient Method setter;
 	private transient boolean initDone;
 
-	public PropertyPath(Class<ORIGIN> originClazz,
-			PropertyPath<ORIGIN, ?> parent, String nameInParent,
-			Class<?> typeInParent, Class<?> declaredIn) {
+	public PropertyPath(Class<ORIGIN> originClazz, PropertyPath<ORIGIN, ?> parent, String nameInParent, Class<?> typeInParent, Class<?> declaredIn) {
 		this.originClazz = originClazz;
 		this.parent = parent;
 		this.nameInParent = nameInParent;
@@ -35,8 +33,7 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
 			declaredInChain = new Class<?>[] { declaredIn };
 		} else {
 			declaredInChain = new Class<?>[parent.declaredInChain.length + 1];
-			System.arraycopy(parent.declaredInChain, 0, declaredInChain, 0,
-					parent.declaredInChain.length);
+			System.arraycopy(parent.declaredInChain, 0, declaredInChain, 0, parent.declaredInChain.length);
 			declaredInChain[parent.declaredInChain.length] = declaredIn;
 		}
 		if (parent == null && nameInParent == null) {
@@ -45,8 +42,7 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
 		} else if (parent == null && nameInParent != null) {
 			this.fullPath = nameInParent;
 			length = 1;
-		} else if (parent != null && parent.fullPath.isEmpty()
-				&& nameInParent != null) {
+		} else if (parent != null && parent.fullPath.isEmpty() && nameInParent != null) {
 			this.fullPath = nameInParent;
 			length = 1;
 		} else if (parent != null) {
@@ -68,10 +64,8 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
 				methods = null;
 				setter = null;
 			} else {
-				methods = getGetters(originClazz, fullPath, parent,
-						nameInParent);
-				setter = getSetter(parent.typeInParent, nameInParent,
-						typeInParent);
+				methods = getGetters(originClazz, fullPath, parent, nameInParent);
+				setter = getSetter(parent.typeInParent, nameInParent, typeInParent);
 			}
 			initDone = true;
 		}
@@ -99,14 +93,11 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
 		return nameInParent;
 	}
 
-	public <NEW_TARGET, M extends PropertyPath<ORIGIN, NEW_TARGET>> M downcast(
-			Class<M> downclazz) {
+	public <NEW_TARGET, M extends PropertyPath<ORIGIN, NEW_TARGET>> M downcast(Class<M> downclazz) {
 
 		try {
-			Constructor<M> constructor = downclazz.getConstructor(Class.class,
-					PropertyPath.class, String.class, Class.class, Class.class);
-			M instance = constructor.newInstance(originClazz, parent,
-					nameInParent, null, null);
+			Constructor<M> constructor = downclazz.getConstructor(Class.class, PropertyPath.class, String.class, Class.class, Class.class);
+			M instance = constructor.newInstance(originClazz, parent, nameInParent, null, null);
 			instance.declaredInChain = this.declaredInChain;
 			return instance;
 		} catch (Exception e) {
@@ -116,22 +107,52 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
 
 	private static final java.util.Map<String, Method> targetClassAndNameInParent2Setter = new java.util.HashMap<String, Method>();
 
-	private static Method getSetter(Class<?> parentTargetClass,
-			String nameInParent, Class<?> typeInParent) {
+	private static Method getSetter(Class<?> parentTargetClass, String nameInParent, Class<?> typeInParent) {
 		final String key = parentTargetClass.getName() + "#" + nameInParent;
 		Method setter = targetClassAndNameInParent2Setter.get(key);
-		if (setter == null
-				&& !targetClassAndNameInParent2Setter.containsKey(key)) {
+		if (setter == null && !targetClassAndNameInParent2Setter.containsKey(key)) {
 			final String setterName = "set" + getCaseRightName(nameInParent);
-			try {
-				setter = parentTargetClass.getMethod(setterName,
-						new Class[] { typeInParent });
-			} catch (SecurityException e) {
-				setter = null;
-			} catch (NoSuchMethodException e) {
-				setter = null;
+			setter = findSetter(parentTargetClass, typeInParent, setterName);
+			if (setter == null) {
+				Class<?> typeInParentPrimitive = getPrimitiveType4ObjectType(typeInParent);
+				if (typeInParentPrimitive != null) {
+					setter = findSetter(parentTargetClass, typeInParentPrimitive, setterName);
+				}
 			}
 			targetClassAndNameInParent2Setter.put(key, setter);
+		}
+		return setter;
+	}
+
+	private static Class<?> getPrimitiveType4ObjectType(Class<?> type) {
+		if (type.equals(Byte.class)) {
+			return byte.class;
+		} else if (type.equals(Short.class)) {
+			return short.class;
+		} else if (type.equals(Integer.class)) {
+			return int.class;
+		} else if (type.equals(Long.class)) {
+			return long.class;
+		} else if (type.equals(Double.class)) {
+			return double.class;
+		} else if (type.equals(Float.class)) {
+			return float.class;
+		} else if (type.equals(Character.class)) {
+			return char.class;
+		} else if (type.equals(Boolean.class)) {
+			return boolean.class;
+		}
+		return null;
+	}
+
+	private static Method findSetter(Class<?> parentTargetClass, Class<?> typeInParent, final String setterName) {
+		Method setter;
+		try {
+			setter = parentTargetClass.getMethod(setterName, new Class[] { typeInParent });
+		} catch (SecurityException e) {
+			setter = null;
+		} catch (NoSuchMethodException e) {
+			setter = null;
 		}
 		return setter;
 	}
@@ -139,8 +160,7 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
 	private static final Method[] EMPTY_METHOD_ARRAY = new Method[0];
 	private static final Map<String, Method[]> originClassAndFullPath2GetterArray = new HashMap<String, Method[]>();
 
-	private static Method[] getGetters(Class<?> originClass, String fullPath,
-			PropertyPath<?, ?> parent, String nameInParent) {
+	private static Method[] getGetters(Class<?> originClass, String fullPath, PropertyPath<?, ?> parent, String nameInParent) {
 		final String key = originClass.getName() + "#" + fullPath;
 
 		Method[] getters = originClassAndFullPath2GetterArray.get(key);
@@ -153,8 +173,7 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
 					getters = new Method[] { getter };
 				} else {
 					getters = new Method[parent.methods.length + 1];
-					System.arraycopy(parent.methods, 0, getters, 0,
-							parent.methods.length);
+					System.arraycopy(parent.methods, 0, getters, 0, parent.methods.length);
 					getters[parent.methods.length] = getter;
 				}
 			}
@@ -169,8 +188,7 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
 		for (final String stry : tries) {
 			final String getterName = stry + getCaseRightName(nameInParent);
 			try {
-				final Method getter = targetClass.getMethod(getterName,
-						new Class[] {});
+				final Method getter = targetClass.getMethod(getterName, new Class[] {});
 				return getter;
 			} catch (SecurityException e) {
 				// ignore;
@@ -182,15 +200,12 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
 	}
 
 	private static String getCaseRightName(String nameInParent) {
-		return nameInParent.substring(0, 1).toUpperCase()
-				+ nameInParent.substring(1);
+		return nameInParent.substring(0, 1).toUpperCase() + nameInParent.substring(1);
 	}
 
 	@Override
 	public String toString() {
-		return originClazz.getName() + "::" + fullPath + "/"
-				+ (setter != null ? setter.getName() : "n/a") + " ("
-				+ typeInParent.getName() + ")";
+		return originClazz.getName() + "::" + fullPath + "/" + (setter != null ? setter.getName() : "n/a") + " (" + typeInParent.getName() + ")";
 	}
 
 	public TARGET get(ORIGIN instance) {
@@ -300,8 +315,7 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
 
 		if (obj instanceof PropertyPath<?, ?>) {
 			PropertyPath<?, ?> prop = (PropertyPath<?, ?>) obj;
-			return fullPath.equals(prop.fullPath)
-					&& arraysEquals(declaredInChain, prop.declaredInChain, -1);
+			return fullPath.equals(prop.fullPath) && arraysEquals(declaredInChain, prop.declaredInChain, -1);
 		}
 		return false;
 	}
@@ -357,8 +371,7 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
 			return false;
 		}
 
-		return arraysEquals(this.declaredInChain, subPath.declaredInChain,
-				subPath.declaredInChain.length);
+		return arraysEquals(this.declaredInChain, subPath.declaredInChain, subPath.declaredInChain.length);
 	}
 
 	public int length() {

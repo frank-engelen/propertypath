@@ -6,14 +6,14 @@ import de.codecentric.propertypath.api.WithProperties;
 @WithProperties
 public class UsAddress extends Address {
 
-    @Property
-    private String state;
+	@Property
+	private String state;
 
-    public String getState() {
-	return state;
-    }
+	public String getState() {
+		return state;
+	}
 
-    public void setState(String state) {
-	this.state = state;
-    }
+	public void setState(String state) {
+		this.state = state;
+	}
 }

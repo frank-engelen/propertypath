@@ -34,6 +34,7 @@ public class PropertyPathIntegrationTest {
 		// Write direct - read via path
 		person.setName("Jim");
 		person.getAddress().setCity("Ratingen");
+		person.setActive(true);
 		Assert.assertEquals("Jim", namePath.get(person));
 		Assert.assertEquals("Ratingen", cityPath.get(person));
 
@@ -42,6 +43,22 @@ public class PropertyPathIntegrationTest {
 		cityPath.set(person, "Essen");
 		Assert.assertEquals("Tom", person.getName());
 		Assert.assertEquals("Essen", person.getAddress().getCity());
+	}
+
+	@Test
+	public void booleanSimplePathesShouldWork() {
+		final PropertyPath<Person, Boolean> activePath = Person.PROPERTIES.active;
+
+		Person person = new Person();
+		person.setAddress(new Address());
+
+		// Write direct - read via path
+		person.setActive(true);
+		Assert.assertEquals(true, activePath.get(person));
+
+		// Write via path - read direct
+		activePath.set(person, Boolean.FALSE);
+		Assert.assertEquals(false, person.isActive());
 	}
 
 	@Test
@@ -75,10 +92,8 @@ public class PropertyPathIntegrationTest {
 	public void equalsAndHashCodeShouldWork() {
 		final PropertyPath<Person, String> namePath = Person.PROPERTIES.name;
 		final PropertyPath<Person, String> cityPath = Person.PROPERTIES.address.city;
-		final PropertyPath<Person, String> namePath2 = PersonProperties
-				.newPersonProperties().name;
-		final AddressProperties<Person, Address> addressProperties = PersonProperties
-				.newPersonProperties().address;
+		final PropertyPath<Person, String> namePath2 = PersonProperties.newPersonProperties().name;
+		final AddressProperties<Person, Address> addressProperties = PersonProperties.newPersonProperties().address;
 		final PropertyPath<Person, String> cityPath2 = addressProperties.city;
 		addressProperties.get(null);
 		cityPath.get(null);
@@ -92,11 +107,9 @@ public class PropertyPathIntegrationTest {
 		Assert.assertFalse(namePath.hashCode() == cityPath.hashCode());
 		Assert.assertFalse(namePath.equals("name"));
 
-		final PropertyPath<OtherPerson, String> otherPersonCityPath = OtherPersonProperties
-				.newOtherPersonProperties().address.city;
+		final PropertyPath<OtherPerson, String> otherPersonCityPath = OtherPersonProperties.newOtherPersonProperties().address.city;
 		Assert.assertFalse(otherPersonCityPath.equals(cityPath));
-		Assert.assertTrue(otherPersonCityPath.getFullPath().equals(
-				cityPath.getFullPath()));
+		Assert.assertTrue(otherPersonCityPath.getFullPath().equals(cityPath.getFullPath()));
 	}
 
 	@Test
@@ -114,16 +127,11 @@ public class PropertyPathIntegrationTest {
 		final PropertyPath<Person, String> namePath = Person.PROPERTIES.name;
 		final PropertyPath<Person, Address> addressPath = Person.PROPERTIES.address;
 
-		field2Error.put(namePath, new ErrorMessages(
-				"Please enter a valid name!"));
+		field2Error.put(namePath, new ErrorMessages("Please enter a valid name!"));
 		field2Error.put(addressPath, new ErrorMessages("Address not valid!"));
 
-		Assert.assertEquals(
-				"Please enter a valid name!",
-				field2Error.get(PersonProperties.newPersonProperties().name).message);
-		Assert.assertEquals(
-				"Address not valid!",
-				field2Error.get(PersonProperties.newPersonProperties().address).message);
+		Assert.assertEquals("Please enter a valid name!", field2Error.get(PersonProperties.newPersonProperties().name).message);
+		Assert.assertEquals("Address not valid!", field2Error.get(PersonProperties.newPersonProperties().address).message);
 	}
 
 	@Test
@@ -142,8 +150,7 @@ public class PropertyPathIntegrationTest {
 		@SuppressWarnings({ "rawtypes" })
 		final Class<UsAddressProperties> cl = UsAddressProperties.class;
 		@SuppressWarnings("unchecked")
-		final Object readState = Person.PROPERTIES.address.downcast(cl).state
-				.get(p);
+		final Object readState = Person.PROPERTIES.address.downcast(cl).state.get(p);
 		Assert.assertEquals("TX", readState);
 	}
 
@@ -156,11 +163,9 @@ public class PropertyPathIntegrationTest {
 		Assert.assertTrue(cityPath.startsWith(addressPath));
 		Assert.assertFalse(namePath.startsWith(addressPath));
 
-		final PropertyPath<YetAnotherPerson, String> yetAnotherPersonCityPath = YetAnotherPersonProperties
-				.newYetAnotherPersonProperties().address.city;
+		final PropertyPath<YetAnotherPerson, String> yetAnotherPersonCityPath = YetAnotherPersonProperties.newYetAnotherPersonProperties().address.city;
 		Assert.assertFalse(yetAnotherPersonCityPath.startsWith(addressPath));
-		Assert.assertTrue(yetAnotherPersonCityPath.getFullPath().startsWith(
-				addressPath.getFullPath()));
+		Assert.assertTrue(yetAnotherPersonCityPath.getFullPath().startsWith(addressPath.getFullPath()));
 	}
 
 	@Test
@@ -221,10 +226,8 @@ public class PropertyPathIntegrationTest {
 
 		// "number" is individually declared in Subclass1 and Subclass2 => it
 		// isn't "equal"
-		Assert.assertFalse(PersonSubclass1.PROPERTIES.number
-				.equals(PersonSubclass2.PROPERTIES.number));
-		Assert.assertFalse(PersonSubclass1.PROPERTIES.number
-				.startsWith(PersonSubclass2.PROPERTIES.number));
+		Assert.assertFalse(PersonSubclass1.PROPERTIES.number.equals(PersonSubclass2.PROPERTIES.number));
+		Assert.assertFalse(PersonSubclass1.PROPERTIES.number.startsWith(PersonSubclass2.PROPERTIES.number));
 
 		// "address.city" is inherited from Person into Subclass1 and Subclass2
 		// => it is "equal"
@@ -249,8 +252,7 @@ public class PropertyPathIntegrationTest {
 			bos.flush();
 			bos.close();
 
-			final ByteArrayInputStream bis = new ByteArrayInputStream(
-					bos.toByteArray());
+			final ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
 			final ObjectInputStream ois = new ObjectInputStream(bis);
 
 			@SuppressWarnings("unchecked")
@@ -290,8 +292,7 @@ public class PropertyPathIntegrationTest {
 		p.setAddress(new Address());
 		p.getAddress().setCity("Ratingen");
 
-		Assert.assertEquals("Ratingen",
-				Person.PROPERTIES.address.city.getNullsafe(p));
+		Assert.assertEquals("Ratingen", Person.PROPERTIES.address.city.getNullsafe(p));
 
 		p.setAddress(null);
 		Assert.assertEquals(null, Person.PROPERTIES.address.city.getNullsafe(p));
@@ -308,9 +309,7 @@ public class PropertyPathIntegrationTest {
 		Assert.assertTrue(Person.PROPERTIES.writeOnlyProperty.isWritable());
 		Assert.assertFalse(Person.PROPERTIES.writeOnlyProperty.isReadable());
 
-		Assert.assertTrue(Person.PROPERTIES.address.writeOnlyProperty
-				.isWritable());
-		Assert.assertFalse(Person.PROPERTIES.address.writeOnlyProperty
-				.isReadable());
+		Assert.assertTrue(Person.PROPERTIES.address.writeOnlyProperty.isWritable());
+		Assert.assertFalse(Person.PROPERTIES.address.writeOnlyProperty.isReadable());
 	}
 }

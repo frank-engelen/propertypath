@@ -7,17 +7,17 @@ import de.codecentric.propertypath.demolib.Address;
 @WithProperties
 public class OtherPerson {
 
-    @Property
-    private String name;
+	@Property
+	private String name;
 
-    @Property
-    private Address address;
+	@Property
+	private Address address;
 
-    public String getName() {
-	return name;
-    }
+	public String getName() {
+		return name;
+	}
 
-    public void setName(String name) {
-	this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 }

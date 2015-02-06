@@ -6,8 +6,7 @@ import de.codecentric.propertypath.api.WithProperties;
 @WithProperties
 public class Address {
 
-	public static final AddressProperties<Address, Address> PROPERTIES = AddressProperties
-			.newAddressProperties();
+	public static final AddressProperties<Address, Address> PROPERTIES = AddressProperties.newAddressProperties();
 
 	@Property
 	private String streetAndNumber;
@@ -44,7 +43,7 @@ public class Address {
 	public void setCountry(String country) {
 		this.country = country;
 	}
-	
+
 	public void setWriteOnlyProperty(String writeOnlyProperty) {
 		this.writeOnlyProperty = writeOnlyProperty;
 	}

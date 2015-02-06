@@ -6,17 +6,17 @@ import de.codecentric.propertypath.api.WithProperties;
 @WithProperties
 public class PersonSubclass2 extends Person {
 
-    @SuppressWarnings("hiding")
-    public static final PersonSubclass2Properties<PersonSubclass2, PersonSubclass2> PROPERTIES = PersonSubclass2Properties.newPersonSubclass2Properties();
+	public static final PersonSubclass2Properties<PersonSubclass2, PersonSubclass2> PROPERTIES = PersonSubclass2Properties
+			.newPersonSubclass2Properties();
 
-    @Property
-    private String number;
+	@Property
+	private String number;
 
-    public String getNumber() {
-	return number;
-    }
+	public String getNumber() {
+		return number;
+	}
 
-    public void setNumber(String number) {
-	this.number = number;
-    }
+	public void setNumber(String number) {
+		this.number = number;
+	}
 }
