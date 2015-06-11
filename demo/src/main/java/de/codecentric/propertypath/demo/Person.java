@@ -32,6 +32,9 @@ public class Person {
 	@Property
 	private String writeOnlyProperty;
 
+	@Property
+	private CharSequence wirdUeberschrieben;
+
 	public String getName() {
 		return name;
 	}

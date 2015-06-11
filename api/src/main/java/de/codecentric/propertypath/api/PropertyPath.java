@@ -14,12 +14,23 @@ public class PropertyPath<ORIGIN, TARGET> implements Serializable {
 	private final String nameInParent;
 	private final String fullPath;
 	private final Class<?> originClazz;
-	private Class<?>[] declaredInChain;
+	protected Class<?>[] declaredInChain;
 	private final Class<?> typeInParent;
 	private final int length;
 	private transient Method[] methods;
 	private transient Method setter;
 	private transient boolean initDone;
+
+	/**
+	 * Subklassen können sinnvoll die gleichen Properties erneut deklarieren wie
+	 * Superklassen ( Beispiel "demo.Person.wirdUeberschrieben". Dies führt zu
+	 * Warnungen "Hiding" in den generierten Klassen. Um die Warnung zu
+	 * Verhindern wird oben an der generierten Klasse ein
+	 * "@SupressWarning("hiding") hinzugefügt. Wenn jetzt keine Überschreibung
+	 * stattfindet, führt das allerdings wieder zu einer Warnung. Daher wird
+	 * immer "___weAllNeedToHideSomething" immer überschrieben!
+	 */
+	protected Object ___weAllNeedToHideSomething = null;
 
 	public PropertyPath(Class<ORIGIN> originClazz, PropertyPath<ORIGIN, ?> parent, String nameInParent, Class<?> typeInParent, Class<?> declaredIn) {
 		this.originClazz = originClazz;

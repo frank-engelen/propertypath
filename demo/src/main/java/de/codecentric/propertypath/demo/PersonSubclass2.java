@@ -6,6 +6,7 @@ import de.codecentric.propertypath.api.WithProperties;
 @WithProperties
 public class PersonSubclass2 extends Person {
 
+	@SuppressWarnings("hiding")
 	public static final PersonSubclass2Properties<PersonSubclass2, PersonSubclass2> PROPERTIES = PersonSubclass2Properties
 			.newPersonSubclass2Properties();
 

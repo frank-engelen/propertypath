@@ -108,9 +108,12 @@ public class PropertyPathAnnotationProcessor extends AbstractProcessor {
 		println();
 
 		// Start of class declaration
+		println("@SuppressWarnings(\"hiding\")");
 		println("public class " + propsClassNameSimple + "<ORIGIN,TARGET> extends " + getSuperClass(currentElement) + " {");
 		println();
 		println("    private static final long serialVersionUID = 1L;");
+		println();
+		println("    protected String ___weAllNeedToHideSomething = null;");
 		println();
 		println(builderAttributes.toString());
 
